@@ -6,7 +6,7 @@
 <title>Study Quest</title>
 <meta name="description" content="Co-op study board game for 1–6 players. Answer your own questions, combine your answers into damage, and try not to get fired.">
 <meta property="og:title" content="Study Quest — try not to get fired">
-<meta property="og:description" content="Co-op study game for MGMT 623 Exam 2. Tap to play in your browser, no download.">
+<meta property="og:description" content="Co-op study game for MGMT 660 Exam 2 (IHRM Ch 4–7). Tap to play in your browser, no download.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://computergenx.github.io/study-quest/">
 <meta name="theme-color" content="#fbfaf5">
@@ -1230,7 +1230,7 @@ const IHRM_RAW = {
 /* built-in packs: shared by id, so clients never need the file */
 const BUILTIN_PACKS = { practice: { raw: PRACTICE_RAW, label: "Practice Exam 2 (59 questions)" }, builtin: { raw: BUILTIN_RAW, label: "Full Ch 7–11 bank (237 + calculators)" },
   ihrm: { raw: IHRM_RAW, label: "MGMT 660 International Business Ch 4–7 (" + IHRM_QS.length + " questions)", gens: IHRM_GENS } };
-const DEFAULT_PACK = "practice";
+const DEFAULT_PACK = "ihrm";
 
 /* ---------- current pack ---------- */
 let PACK = null, PACK_RAW = null, PACK_ID = "builtin";
