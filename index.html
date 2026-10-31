@@ -861,6 +861,7 @@ function validatePack(p) {
       if (!str(q.q, 1200)) return "missing question text";
       const c = String(q.c); if (!sk.includes(c)) return `subject "${q.c}" is not in meta.subjects`;
       const base = { id: "q" + i, kind: q.kind, c, d: num(q.d, 1, 3, 2), q: str(q.q, 1200), e: str(q.e, 600) || "" };
+      if (q.core === false) base.core = false; // optional: off the exam review list, drawn less often
       if (Array.isArray(q.tbl) && q.tbl.length && q.tbl.length <= 12 && q.tbl.every(r => Array.isArray(r) && r.length <= 8)) base.tbl = q.tbl.map(r => r.map(x => String(x).slice(0, 60)));
       if (q.kind === "tf") { if (typeof q.tf !== "boolean") return '"tf" must be true or false'; base.tf = q.tf; }
       else if (q.kind === "mc") {
@@ -1251,6 +1252,75 @@ IM(5, 3, "Essay angle: a firm says 'replace long-term expatriates with HCNs, sho
 IM(6, 3, "Essay angle: how does an ETHNOCENTRIC firm typically appraise its managers abroad?", ["HQ-driven, hard goals, standardized forms, one cultural boundary in role conception", "Multiple raters, contextual goals, and two-boundary TCN issues", "No appraisal at all", "Only peer ratings from HCNs"], "Geocentric firms use multiple raters, contextual goals, and face TCN two-boundary issues. (Study guide essay)");
 IM(7, 3, "Essay angle: why is repatriation unclear for TCNs?", ["'Home' can be the parent country or the TCN's own country", "TCNs never move again", "TCNs are always inpatriates", "TCNs have no home country"], "Plan the next move as career management. (Study guide essay)");
 
+
+/* ===== Aligned to the official MGMT 660 Exam 2 Review (Ch 4–7 topic list) ===== */
+// Ch 4 — types of assignments, purposes & roles, expatriate failure
+IM(4, 1, "Which of these is NOT one of the eight types of global workers on the Ch 4 'types of assignment' slide?", ["Inpatriate consultants", "Short-term assignees", "International business travelers", "Global domestics"], "Ch 4 slide 3: corporate expatriates, short-term assignees, flexpatriates, self-initiated expatriates, international business travelers, international commuters, global virtual team members, global domestics.");
+IM(4, 2, "A sales director makes frequent short business trips to customers in several countries but never takes an assignment. Which type of global worker is this?", ["International business traveler", "Corporate expatriate", "Short-term assignee", "Global domestic"], "Ch 4 slide 3.");
+IM(4, 2, "An engineer is sent to Poland for 8 months to fix a production problem; his family stays home. Which assignment type fits?", ["Short-term assignee", "Corporate expatriate", "Flexpatriate", "Global domestic"], "Table 4.2: short-term = 3–12 months, usually without family.");
+IM(4, 2, "Which assignment purpose is MOST about the MNE as a whole, rather than the job or the person?", ["Organization development", "Position filling", "Management development", "Language training"], "Position filling = the job; management development = the person; organization development = the MNE (control, socialization, coordination).");
+IM(4, 2, "An expatriate builds personal ties between people at HQ and the subsidiary so information and help flow across units. Which role is this?", ["Network builder", "Agent of direct control", "Language node", "Boundary spanner"], "Figure 4.1.");
+IM(4, 2, "An expatriate teaches HCNs a new quality system that headquarters developed. Which Figure 4.1 role is this?", ["Transfer of competence and knowledge", "Language node", "Network builder", "Agent of direct control"], "Figure 4.1; also Ch 7 slide 3 (expatriates are trainers).");
+IM(4, 2, "Which is a DIRECT cost of expatriate failure?", ["The relocation expenses and salary already paid, plus the cost to send a replacement", "Lost relationships with local customers", "Damage to the MNE's reputation in the host country", "Lower morale among HCNs"], "Indirect costs: relationships, market share, reputation, morale.");
+IT(4, 2, "The slides say the reasons for expatriate failure today are similar to those found in earlier studies.", true, "Ch 4 slide 11, though assignees' experiences have likely changed.");
+IT(4, 2, "The slides say expatriate SUCCESS should also be defined more broadly, with subjective indicators such as career or life satisfaction.", true, "Ch 4 slide 11: 'This is also true for expatriate success.'");
+// Ch 5 — staffing attitudes (benefits & drawbacks), determinants, selection, adjustment
+IM(5, 2, "Which is a BENEFIT of an ethnocentric staffing approach?", ["Strong HQ control and coordination, and easy transfer of core skills to the subsidiary", "Removes language barriers with local staff", "Builds a truly international executive team", "Lowest cost of any approach"], "Drawbacks: limited HCN promotion, slow local adaptation, HCN resentment, and pay gaps between PCNs and HCNs. (Table 5.1)");
+IM(5, 2, "Which is a BENEFIT of a polycentric staffing approach?", ["No language barriers and lower costs, since HCNs know the local market", "Strongest HQ control", "PCNs gain the most international experience", "Managers move freely across the whole MNE"], "Drawback: a gap between HQ and subsidiaries — a federation of national units. (Table 5.1, HCNs)");
+IM(5, 2, "Which is a DRAWBACK of a geocentric staffing approach?", ["It is costly, needs work permits and immigration help, and pay gets complex", "HCNs never get promoted", "Subsidiaries become isolated national units", "It ignores ability in favor of nationality"], "Benefit: the best person for each job and a truly international executive team.");
+IM(5, 2, "Which is a BENEFIT of a regiocentric staffing approach?", ["More interaction among managers moved within the region, and better regional fit", "Managers move freely between all regions and HQ", "It removes all costs of transfers", "It guarantees the strongest HQ control"], "Drawback: regional silos ('regional federalism'); staff rarely reach global HQ.");
+IM(5, 3, "A firm says 'nationality does not matter — we pick the best person, and anyone can run any unit.' Which drawback must its HR team plan for?", ["Immigration rules and complex, costly compensation for a mobile workforce", "HCN resentment of a PCN glass ceiling", "A federation of national units with little HQ contact", "Lack of any international experience among managers"], "That is a geocentric attitude.");
+IM(5, 2, "Which is NOT a 'company specificity' in Figure 5.1?", ["Staff availability in the host country", "MNE structure and strategy", "International experience", "Organizational culture"], "Staff availability is a context specificity.");
+IM(5, 2, "A firm opens a greenfield plant rather than acquiring one. Under Figure 5.1, which determinant group does the establishment method belong to, and which way does a greenfield site usually push?", ["Local unit specificities — toward PCNs, since there are no existing local managers", "Context specificities — toward HCNs", "IHRM practices — toward TCNs", "Company specificities — no effect"], "An acquisition, by contrast, often has capable HCN managers already.");
+IM(5, 2, "A host country has strict labor laws and visa limits on foreign managers. Which Figure 5.1 group is this, and which way does it push?", ["Context specificities (institutional context) — toward HCNs", "Company specificities — toward PCNs", "Local unit specificities — toward TCNs", "IHRM practices — toward PCNs"], "Figure 5.1.");
+IM(5, 3, "A strategically critical R&D subsidiary needs tight control and decisions are made at HQ. Which Figure 5.1 items point toward PCNs?", ["Strategic role and importance, need for control, and locus of decision (local unit specificities)", "Cultural and institutional context", "Staff availability and industry type", "Compensation and career management"], "Figure 5.1.");
+IM(5, 2, "Which determinant of staffing choice is an IHRM PRACTICE in Figure 5.1?", ["Compensation", "Type of industry", "Corporate governance", "Establishment method"], "IHRM practices: selection, training and development, compensation, career management.");
+IM(5, 2, "Figure 5.2's selection factor 'MNE requirements' refers to what?", ["The firm's situation, such as the mode of operation, the length of the assignment, and how much knowledge must be transferred", "The candidate's technical skills", "The spouse's career", "The host country's weather"], "MNE requirements is one of the three situational factors with country/cultural requirements and language.");
+IM(5, 2, "A candidate is technically excellent but rigid, impatient, and judgmental about other cultures. Which selection factor is weak?", ["Cross-cultural suitability", "Technical ability", "MNE requirements", "Language"], "Figure 5.2: an individual factor.");
+IM(5, 2, "In the adjustment framework, a spouse who is unhappy in the host country is which kind of antecedent?", ["Non-work", "Job", "Organizational", "Individual"], "Figure 5.3/5.4 antecedents: individual, job, organizational, non-work.");
+IM(5, 2, "Clear role expectations and support from the company during the assignment are which kinds of adjustment antecedents?", ["Job and organizational", "Individual and non-work", "Modes and outcomes", "Psychological and socio-cultural"], "Figure 5.3/5.4.");
+IM(5, 2, "In the adjustment framework, what are 'modes' of adjustment?", ["Strategies of adjustment, such as coping", "The outcomes of adjustment", "The causes of adjustment", "Types of assignment"], "Antecedents → modes (strategies, e.g., coping) → outcomes.");
+IM(5, 2, "An expatriate gets comfortable with daily life — food, housing, transport, and shopping. Which adjustment outcome is this?", ["General adjustment", "Interaction adjustment", "Work adjustment", "Repatriation adjustment"], "Interaction = with host nationals; work = the job.");
+IM(5, 2, "An expatriate learns to socialize and communicate easily with host nationals. Which adjustment outcome is this?", ["Interaction adjustment", "General adjustment", "Work adjustment", "Job antecedent"], "Figure 5.3/5.4.");
+IT(5, 2, "In Figure 5.1, staff availability is a context specificity.", true, "Context: cultural and institutional context, staff availability, type of industry.");
+IT(5, 2, "In the Figure 5.2 selection model, language is an individual factor.", false, "Language is a situational factor, with country/cultural requirements and MNE requirements.");
+IT(5, 2, "The adjustment framework treats coping as an outcome of adjustment.", false, "Coping is a mode (strategy) of adjustment.");
+// Ch 6 — constraints, variables, assignment types & PM, criteria, appraisal questions
+IM(6, 2, "In Figure 6.3, which variable sits CLOSEST to expatriate performance (the innermost box)?", ["The compensation package", "Cultural adjustment of self and family", "Host environment", "Headquarters' support"], "From inner to outer: compensation package, task, headquarters' support, host environment, cultural adjustment (self and family).");
+IM(6, 2, "An expatriate's pay package does not reward the hard parts of the job, so she focuses on easy tasks. Which variable affecting performance is this?", ["The compensation package", "The task", "Host environment", "Headquarters' support"], "Ch 6 slide 5.");
+IM(6, 2, "An expatriate's assignment goals and role are unclear and keep changing. Which variable affecting performance is this?", ["The task (assignment task variables and role)", "Host environment", "Compensation package", "Cultural adjustment"], "Ch 6 slide 5: 'the task — the assignment task variables and the expatriate's role.'");
+IM(6, 2, "HQ forgets about an expatriate, answers her emails late, and gives no help with problems. Which variable affecting performance is this?", ["Headquarters' support", "The task", "Host environment", "Compensation package"], "Ch 6 slide 5.");
+IM(6, 2, "A joint-venture partner and local regulations make an expatriate's plant hard to run. Which variable affecting performance is this?", ["Host environment (the subsidiary or foreign facility)", "Headquarters' support", "Compensation package", "The task"], "Ch 6 slide 5: 'the environment in which performance occurs.'");
+IM(6, 3, "Which pairing of assignment type and appraisal focus is BEST?", ["Functional — adoption of processes and practices in both directions, judged with input from local raters", "Technical — mainly the assignee's personal learning", "Developmental — only hard profit targets", "Strategic — only whether a system was installed"], "Technical: delivery and skill transfer. Developmental: learning goals. Strategic: strategic results and leadership.");
+IM(6, 2, "How often should international appraisals happen, according to the questions on the slides?", ["Frequency is an open question the MNE must decide — e.g., annual reviews plus check-ins fitted to the assignment", "Only once, at the end of the assignment", "Never during the assignment", "Every day"], "Ch 6 slide 12 lists frequency as a key question.");
+IM(6, 2, "Which question about appraisal deals with direct vs. indirect feedback and saving face?", ["How to communicate feedback", "Who conducts the appraisal", "Standardized or customized", "Frequency"], "Ch 6 slide 12; the related issue is cultural applicability.");
+IM(6, 2, "A U.S. MNE uses a self-appraisal form in a culture where praising yourself is seen as rude. Which appraisal question does this raise?", ["Cultural applicability", "Frequency", "Who conducts the appraisal", "Whole vs. part"], "Ch 6 slide 12.");
+IT(6, 2, "'Variable levels of maturity across markets' means a new subsidiary needs relevant comparative data before it is judged against mature units.", true, "Ch 6 slide 3.");
+IT(6, 2, "Soft goals, such as leadership style, are easier to measure objectively than hard goals.", false, "Hard goals are quantifiable; soft goals are relationship- or trait-based.");
+// Ch 7 — outcomes, T&D process, pre-departure, M&O, repatriation
+IM(7, 2, "Figure 7.1 (international training and development) begins with which step?", ["Recruitment and selection", "Pre-departure training", "International assignments", "International team"], "Recruitment and selection → training (incl. pre-departure training) → international assignments ↔ development → international team.");
+IM(7, 2, "In Figure 7.1, what is the link between international assignments and development?", ["A two-way link: assignments develop people, and development shapes later assignments", "None — they are unrelated", "Development happens only before selection", "Assignments replace all development"], "Figure 7.1 shows a double arrow between them.");
+IM(7, 3, "In Figure 7.1, which box is drawn with a dashed (optional) outline at the END of the process?", ["International team", "Recruitment and selection", "Pre-departure training", "Development"], "Development can lead to an international team; selection also feeds assignments and teams directly (dashed lines).");
+IM(7, 2, "Why does Figure 7.1 start with recruitment and selection instead of training?", ["Training builds on the people selected — good selection makes training and the assignment more likely to work", "Selection is optional", "Training is not part of the process", "Development comes before hiring"], "Figure 7.1.");
+IM(7, 2, "Which pre-departure training component covers the host culture's values and norms, so the expatriate can avoid culture shock?", ["Cultural awareness programs", "Security briefings", "Practical assistance", "Preliminary visits"], "Ch 7 slide 5.");
+IM(7, 3, "An expatriate needs only to get by in shops and taxis for a 3-week stay. Which level of language training matches Mendenhall–Oddou?", ["'Survival-level' language training (information-giving approach)", "Extensive language training (immersion)", "Moderate language training (affective)", "No language training is ever given"], "Ch 7 slides 8–10.");
+IM(7, 2, "Under the M&O model, a 6-month job with some interaction with locals calls for which approach?", ["Affective (moderate rigor, about 1–4 weeks)", "Information-giving (under a week)", "Immersion (2+ months)", "Preliminary visit only"], "Ch 7 slide 9: 2–12 month job, some interaction.");
+IM(7, 2, "Which method is part of the IMMERSION approach?", ["Intercultural web-based workshops and field experiences", "Lectures and movies only", "Culture assimilator training only", "Interpreters only"], "Ch 7 slide 10.");
+IM(7, 2, "Which is an outcome of international assignments for the INDIVIDUAL, per the Ch 7 'outcomes' slide?", ["Experience and career advancement", "A cadre of international operators", "Direct control and socialization", "Accumulated organizational knowledge"], "The others are MNE outcomes. Both gain a global mindset.");
+IM(7, 2, "Why does the slide say direct control and socialization from assignments help the MNE?", ["They help with knowledge transfer and competence transfer", "They cut the training budget to zero", "They replace HCNs", "They remove the need for repatriation"], "Ch 7 slide 2.");
+IM(7, 2, "Which is one of the 'strategies for smooth re-entry'?", ["Extended home visits to keep up with social, family, and organizational changes", "Ending all contact until the assignment ends", "A surprise new job on the first day back", "Cutting pay right away to 'reset' expectations"], "Ch 7 slide 21.");
+IM(7, 2, "Which smooth re-entry strategy directly fights 'devaluing experience'?", ["Visible and concrete expressions of the repatriate's value to the firm", "Personalized financial and tax advice", "Extended home visits", "Pre-departure briefings"], "Ch 7 slide 21 matched to Figure 7.5.");
+IM(7, 2, "Which smooth re-entry strategy best addresses the loss of the overseas allowance?", ["Personalized financial and tax advice", "Mentoring that continues after return", "Reorientation on organizational changes", "Multiple career planning sessions"], "Ch 7 slide 21 matched to Table 7.3.");
+IM(7, 2, "Which smooth re-entry strategy best addresses 'no post-assignment guarantee'?", ["Written repatriate agreements clarifying available assignments upon return", "Extended home visits", "Personalized social reorientation", "Stress management only"], "Ch 7 slide 21 matched to Figure 7.5 (career anxiety).");
+IM(7, 3, "Which smooth re-entry strategy best helps a returning family that feels out of touch with friends at home?", ["Personalized reorientation for social readjustment", "Written repatriate agreements", "Financial and tax advice", "Multiple career planning sessions"], "Ch 7 slide 21 matched to the social factors in Figure 7.5.");
+IT(7, 2, "'Providing an adjustment period upon return' is one of the strategies for smooth re-entry.", true, "Ch 7 slide 21.");
+IT(7, 2, "In Figure 7.5, family adjustment is a job-related factor in repatriate adjustment.", false, "It is a social factor, with social networks and the effect on the partner's career.");
+IT(7, 2, "In Figure 7.1, pre-departure training comes after recruitment and selection and before international assignments.", true, "Figure 7.1.");
+
+/* Topics outside the Exam 2 Review list stay in the bank but come up less often (see drawQ). */
+const IHRM_OFF = /Table 4\.1|Table 5\.6|by status|low status|taxonomy|cognitive flexibility|horizontal comparison|dual.career|glass ceiling|Adler|female expat|women|Figure 6\.1|Figure 6\.2|Figure 6\.6|GPM|funneling|role conception|role theory|role sender|international teams|T&D TREND|trend noted|Figure 7\.2/i;
+for (const q of IHRM_QS) q.core = !IHRM_OFF.test(q.q);
+
 /* ---------- short answers (Training Workshop / Case Study Desk): graded by key points; better answers = rarer gear ---------- */
 const IHRM_SA = [
   { c: "4", q: "Name the three purposes of international assignments (Edström & Galbraith) and give a one-line example of each.",
@@ -1274,18 +1344,30 @@ const IHRM_SA = [
   { c: "5", q: "What are the six factors in expatriate selection? Why is technical ability alone not enough?",
     model: "Individual: technical ability, cross-cultural suitability, family requirements. Situation: country/cultural requirements, language, MNE requirements. Technical skill is easy to measure and feels safe, but family and cross-cultural problems cause most failures — technical ability is necessary but not sufficient.",
     rub: [{ l: "Factors named (1 pt each, max 6)", p: 6, each: 1, count: ["technical", "cross.?cultural", "family", "country|cultural requirement", "language", "mne|company|organi[sz]ation(al)? requirement"] }, { l: "Family/cross-cultural problems cause failure", p: 2, re: ["fail", "family", "adjust"] }, { l: "Necessary but not sufficient", p: 2, re: ["not (enough|sufficient)", "necessary", "alone"] }] },
-  { c: "5", q: "Why are dual-career couples a strategic IHRM issue, and what are three ways an MNE can help?",
-    model: "Partners have their own careers, so many refuse assignments and partner dissatisfaction is a top cause of failure — the candidate pool shrinks, especially for women. Solutions: inter-firm networking, job-hunting assistance, intra-firm employment, compensation for lost income, work-life support, managerial support, lessons from COVID-19 (remote work).",
-    rub: [{ l: "Refusals / shrinking pool / failure", p: 3, re: ["refus", "pool", "decline", "fail", "turn down"] }, { l: "Solutions (2 pts each, max 6)", p: 6, each: 2, count: ["inter.?firm|network", "job.?hunt|job search", "intra.?firm|within the (mne|company)", "compensat|allowance|lost income", "work.?life|remote|covid", "managerial support|mentor"] }, { l: "Mentions the partner/spouse", p: 1, re: ["partner", "spouse"] }] },
   { c: "6", q: "Name the five constraints on performance management in MNEs and explain one with an example.",
     model: "Whole vs. part; non-comparable data; volatility of the global environment; separation by time and distance; variable levels of market maturity. Example: a unit runs at a loss on purpose to challenge a global competitor (whole vs. part), so judging it on local profit alone is unfair.",
     rub: [{ l: "Constraints named (1.5 pts each, max 7)", p: 7, each: 1.5, count: ["whole", "non.?comparable|compar", "volatil", "time|distance", "maturit"] }, { l: "Explains one with an example", p: 3, re: ["e\\.g\\.", "example", "for instance", "currency", "loss", "competitor"] }] },
   { c: "6", q: "Define hard, soft, and contextual goals, and explain why an expatriate's appraisal should combine them.",
     model: "Hard: objective, quantifiable (ROI, market share, sales). Soft: relationship or trait based (leadership, interpersonal skills). Contextual: account for factors outside the person's control (currency, politics, market maturity). Combine them because hard goals alone punish people for the environment, soft goals alone are subjective, and contextual goals make the numbers fair.",
     rub: [{ l: "Hard = objective / quantifiable", p: 2, re: ["hard[^.]{0,60}(objective|quantif|measur|roi|market share|number)"] }, { l: "Soft = relationship / trait", p: 2, re: ["soft[^.]{0,60}(relation|trait|leader|interpersonal|subjective)"] }, { l: "Contextual = outside control", p: 2, re: ["contextual[^.]{0,80}(outside|control|situation|environment|currency|factor)"] }, { l: "Why combine", p: 4, re: ["unfair|punish|fair", "subjective|bias", "balance|combin"] }] },
-  { c: "6", q: "Using role theory, explain why performance management is harder for a TCN manager than a PCN manager.",
-    model: "HQ (role sender) communicates a role conception to the manager (role recipient); host stakeholders are role senders too. A PCN crosses one cultural boundary, but a TCN crosses two (parent culture, own culture, host culture), so there is more role ambiguity and role conflict. Fix: clear written goals, regular HQ contact, raters who know all contexts.",
-    rub: [{ l: "Role sender / recipient / conception", p: 2, re: ["role (sender|recipient|conception|expectation)"] }, { l: "One vs. two cultural boundaries", p: 3, re: ["two (cultural )?boundar", "2 (cultural )?boundar", "two cultures|three cultures"] }, { l: "Role ambiguity / conflict", p: 3, re: ["ambigu", "conflict"] }, { l: "A fix", p: 2, re: ["clear", "goal", "contact", "rater", "written"] }] },
+  { c: "5", q: "Name the four groups of determinants of staffing choices (Figure 5.1) and give one example from each.",
+    model: "Context specificities: cultural and institutional context, staff availability, type of industry. Company specificities: MNE structure and strategy, international experience, corporate governance, organizational culture. Local unit specificities: establishment method (greenfield vs. acquisition), strategic role and importance, need for control, locus of decision. IHRM practices: selection, training and development, compensation, career management.",
+    rub: [{ l: "Context specificities + example", p: 2.5, re: ["context[^.]{0,120}(cultur|institution|availab|industr|law)"] }, { l: "Company specificities + example", p: 2.5, re: ["company[^.]{0,120}(structure|strateg|experience|governance|culture)"] }, { l: "Local unit specificities + example", p: 2.5, re: ["(local unit|subsidiary)[^.]{0,120}(establish|greenfield|acqui|strategic|control|decision)"] }, { l: "IHRM practices + example", p: 2.5, re: ["(ihrm|hr) practice[^.]{0,120}(selection|training|compensat|career)"] }] },
+  { c: "5", q: "Describe the adjustment framework: the antecedents, the modes, and the outcomes.",
+    model: "Antecedents: individual (e.g., prior experience, personality), job (role clarity), organizational (company support), and non-work (family, spouse). Modes: strategies of adjustment, such as coping. Outcomes: interaction adjustment (with host nationals), work adjustment (the job), and general adjustment (daily life) — each with a psychological and a socio-cultural side.",
+    rub: [{ l: "Antecedents named (1 pt each, max 4)", p: 4, each: 1, count: ["individual", "\\bjob\\b", "organi[sz]ation", "non.?work|family|spouse"] }, { l: "Modes = strategies / coping", p: 2, re: ["coping", "strateg", "mode"] }, { l: "Outcomes named (1 pt each, max 3)", p: 3, each: 1, count: ["interaction", "work adjust", "general"] }, { l: "Psychological and socio-cultural", p: 1, re: ["psycholog", "socio"] }] },
+  { c: "6", q: "Name the five variables affecting expatriate performance and give an HR action for any two.",
+    model: "Compensation package, task (assignment variables and role), headquarters' support, host environment (the subsidiary or facility), and cultural adjustment of self and family. HR actions: align the pay package with the goals; write clear task and role goals; assign an HQ sponsor; use contextual goals for the host environment; give family CCT and support.",
+    rub: [{ l: "Variables named (1.4 pts each, max 7)", p: 7, each: 1.4, count: ["compensat|pay", "task|role", "headquarter|hq|support", "environment|host", "cultural adjust|family"] }, { l: "HR actions", p: 3, re: ["sponsor|mentor", "clear|goal", "training|cct", "contextual", "align"] }] },
+  { c: "6", q: "What are the key questions around international performance appraisal?",
+    model: "Who conducts the appraisal (host manager, home manager, or both)? Should the form be standardized or customized? How often (frequency)? How should feedback be communicated (direct vs. indirect, saving face)? Is the process culturally applicable? Many firms combine host and home raters, weighted by who knows the context.",
+    rub: [{ l: "Questions named (2 pts each, max 8)", p: 8, each: 2, count: ["who|rater|appraiser", "standardi[sz]|customi[sz]", "frequen|how often", "feedback", "cultur"] }, { l: "Recommends multiple raters / a balance", p: 2, re: ["both", "multiple|several|combin", "weigh"] }] },
+  { c: "7", q: "Describe the international training and development process (Figure 7.1) and the essential components of pre-departure training.",
+    model: "Recruitment and selection → training (including pre-departure training) → international assignments, which link both ways with development → and can lead to international teams. Pre-departure training: cultural awareness programs, preliminary visits, language training, practical assistance with day-to-day matters, and security briefings.",
+    rub: [{ l: "Selection first", p: 2, re: ["selection|recruit"] }, { l: "Training → assignments ↔ development", p: 2, re: ["assignment[^.]{0,80}develop|develop[^.]{0,80}assignment"] }, { l: "International team", p: 1, re: ["team"] }, { l: "Pre-departure components (1 pt each, max 5)", p: 5, each: 1, count: ["cultural awareness|culture", "preliminary visit|visit", "language", "practical|day.to.day|housing|school", "security"] }] },
+  { c: "7", q: "List at least five strategies for a smooth re-entry and link one to a factor in repatriate adjustment.",
+    model: "Pre-departure briefings on what to expect; multiple career planning sessions; written repatriate agreements on the return job; mentoring that continues after return; extended home visits; reorientation on organizational changes; personalized social reorientation; personalized financial and tax advice; an adjustment period; visible expressions of the repatriate's value. Example: written agreements reduce career anxiety (no post-assignment guarantee).",
+    rub: [{ l: "Strategies (1.5 pts each, max 7.5)", p: 7.5, each: 1.5, count: ["brief", "career plan", "written|agreement", "mentor", "home visit|visit", "reorient", "financ|tax", "adjustment period|time to adjust", "value|recogni"] }, { l: "Links to an adjustment factor", p: 2.5, re: ["anxiety", "devalu", "status|pay", "family|partner|social", "guarantee"] }] },
   { c: "7", q: "Explain the Mendenhall & Oddou cross-cultural training model and recommend an approach for a 2-year, high-interaction post in a very different culture.",
     model: "Training rigor and length should rise with the expected interaction with host nationals and culture novelty. Information-giving (low rigor, under a week: briefings, books, survival language); affective (moderate, 1–4 weeks: culture assimilator, role-play, critical incidents); immersion (high, 1–2+ months: assessment centre, field experiences, simulations, extensive language). A 2-year, high-interaction, novel culture calls for immersion, including the family.",
     rub: [{ l: "Interaction + culture novelty drive rigor", p: 3, re: ["interaction", "novel", "rigor|rigour"] }, { l: "Approaches named (1 pt each)", p: 3, each: 1, count: ["information.?giving", "affective", "immersion"] }, { l: "Recommends immersion", p: 3, re: ["immersion"] }, { l: "Mentions length (weeks/months)", p: 1, re: ["week", "month"] }] },
@@ -1428,16 +1510,21 @@ function drawQ(S, subj, maxD, r) {
   if (!pool.length) pool = all.filter(q => (!subj || q.c === subj) && fresh(q));
   if (!pool.length) pool = all.filter(fresh);
   if (!pool.length) { S.used = []; pool = all.slice(); }
+  const core = pool.filter(q => q.core !== false); if (core.length && core.length < pool.length && r() < CORE_SHARE) pool = core;
   const q = pick(r, pool); S.used.push(q.id); return prepQ(q, r);
 }
+const CORE_SHARE = 0.8; // packs can mark questions core:false (off the review list); 80% of draws skip them
 
 /* ============================================================
    GAME RULES — one state object, one reducer.
    The host (or the single device in pass-and-play) is the only place reduce() runs.
    ============================================================ */
 /* Performance bars = the share of answers the team must get right before a fight's deadline.
-   Rivals on the open floor: 60 / 70 / 80% by region. Dungeons: Subsidiary 60–65%, Plant 72–80%, HQ 85–90%. */
-const REGION_BARS = [0.6, 0.7, 0.8];
+   Rivals on the open floor are short, low-stress training fights: 40 / 45 / 50% by region, 3–5 questions each, no PTO lost on a miss,
+   and they can drop items or gear. Dungeons: Subsidiary 60–65%, Plant 72–80%, HQ 85–90%. */
+const REGION_BARS = [0.4, 0.45, 0.5];
+const TRAIN_QS = n => n === 1 ? 5 : n <= 3 ? 4 : 3; // questions per player in a rival fight; HP still sums every player's attack, so bigger teams face bigger rivals
+const TRAIN_DMG = 0.6, DROP_ITEM = 0.35, DROP_GEAR = 0.25, CLEAN_WIN = 0.8;
 const DUNGEON_PLAN = [
   { bars: [0.6, 0.65], kinds: ["normal", "elite"], tier: 1, reward: 40 },
   { bars: [0.72, 0.8], kinds: ["normal", "elite"], tier: 2, reward: 60 },
@@ -1669,12 +1756,12 @@ function fightHP(S, subject, bar, rounds) {
 }
 function startCombat(S, tileId, r) {
   const t = S.map.tiles[tileId], room = t.type === "dungeon" ? t.rooms[t.progress] : t, e = enemyById(room.enemy), n = S.order.length, tierM = 1 + 0.15 * t.tier;
-  const bar = room.bar || 0.7, rounds = Math.max(4, Math.ceil(FIGHT_QS[e.boss ? "boss" : e.elite ? "elite" : "normal"] / n));
+  const train = t.type === "enemy", bar = room.bar || 0.7, rounds = train ? TRAIN_QS(n) : Math.max(4, Math.ceil(FIGHT_QS[e.boss ? "boss" : e.elite ? "elite" : "normal"] / n));
   const hp = fightHP(S, e.subject, bar, rounds);
   S.phase = "combat"; S.moves = 0;
-  S.combat = { tile: tileId, tier: t.tier, bar, rounds, okTot: 0, qTot: 0, guard: hireSum(S, "guard"), round: 0, step: "talk", streak: {}, missed: {}, qs: {}, ans: {}, elim: {}, extra: {}, deadline: 0,
+  S.combat = { tile: tileId, tier: t.tier, train, bar, rounds, okTot: 0, qTot: 0, guard: hireSum(S, "guard"), round: 0, step: "talk", streak: {}, missed: {}, qs: {}, ans: {}, elim: {}, extra: {}, deadline: 0,
     talkUntil: S.now + TALK_MS, reveal: null, over: null, revealAt: 0, dungeon: t.type === "dungeon" ? { d: t.d, room: t.progress, of: t.rooms.length } : null,
-    enemy: { id: e.id, name: e.name, art: e.art, subject: e.subject, hp, max: hp, dmg: Math.round(e.dmg * tierM * (1 + 0.05 * Math.floor(S.chaos)) * (n === 1 ? 0.7 : 1)), /* a solo player takes every hit */ boss: e.boss, elite: e.elite, quip: e.quip } };
+    enemy: { id: e.id, name: e.name, art: e.art, subject: e.subject, hp, max: hp, dmg: Math.round(e.dmg * tierM * (1 + 0.05 * Math.floor(S.chaos)) * (n === 1 ? 0.7 : 1) * (train ? TRAIN_DMG : 1)), /* a solo player takes every hit */ boss: e.boss, elite: e.elite, quip: e.quip } };
   for (const p of S.order) { const o = S.players[p]; if (clsOf(o).perk === "shield" && o.shield < 1) o.shield = 1; }
   logp(S, `${e.boss ? "BOSS: " : ""}${e.name} blocks the way.`);
   if (S.local || connected(S).length <= 1) beginRound(S, r);
@@ -1752,7 +1839,7 @@ function resolveRound(S) {
         if (t.d === 2) C.final = true;
         else { const g = DUNGEON_PLAN[t.d].reward + bonus + BOUNTY_PER_RIGHT * C.okTot; S.gold += g; reopenWork(S); logp(S, `${dname(t.d)} cleared! +${TH().currency}${g}. The ${dname(t.d + 1)} is open, and the ${TH().tiles.work}s reopen.`); }
       } else { C.nextRoom = true; const g = BOUNTY_PER_RIGHT * C.okTot; S.gold += g; C.pay = g; }
-    } else { t.done = true; const g = BOUNTY_BASE + BOUNTY_TIER * C.tier + BOUNTY_PER_RIGHT * C.okTot + bonus; S.gold += g; C.pay = g; logp(S, `${C.enemy.name} cleared! Bounty +${TH().currency}${g} (${C.okTot} right answers).`); }
+    } else { t.done = true; const g = BOUNTY_BASE + BOUNTY_TIER * C.tier + BOUNTY_PER_RIGHT * C.okTot + bonus; S.gold += g; C.pay = g; logp(S, `${C.enemy.name} cleared! Bounty +${TH().currency}${g} (${C.okTot} right answers).`); C.drop = rivalDrop(S, C, r); }
     const fr = hireSum(S, "focus");
     for (const p of S.order) { const o = S.players[p]; o.focus = Math.min(9, o.focus + fr + (clsOf(o).perk === "focus" ? 1 : 0)); if (clsOf(o).perk === "gold") S.gold += 10; }
   } else {
@@ -1770,6 +1857,7 @@ function resolveRound(S) {
       C.over = "lose"; S.lost = true; S.why = "final";
       logp(S, `Missed the deadline on ${C.enemy.name}. The board lets everyone go.`);
     }
+    else if (C.round >= C.rounds && C.train) { C.over = "deadline"; logp(S, `${C.enemy.name} outlasted the team. No PTO lost — come back for another try.`); }
     else if (C.round >= C.rounds) { // missed the deadline
       C.over = "deadline";
       if (S.lives > 0) S.lives--; else { S.lost = true; C.over = "lose"; S.why = S.why || "deadline"; }
@@ -1777,6 +1865,15 @@ function resolveRound(S) {
     }
   }
   C.reveal = { per, total, perfect, okN }; C.step = "reveal"; C.revealAt = S.now;
+}
+/* Rival drops: a clean win (80%+ right) always drops something. Gear only drops as an upgrade for the player whose turn it is; tier 2 from region 2 on. */
+function rivalDrop(S, C, r) {
+  const p = active(S), pl = S.players[p]; if (!pl) return null;
+  const clean = C.qTot && C.okTot / C.qTot >= CLEAN_WIN, roll = r(), tier = C.tier >= 1 && r() < 0.5 ? 2 : 1;
+  const ups = GEAR.filter(g => g.tier === tier && g.cost && (!gearOf(pl, g.slot) || gearOf(pl, g.slot).tier < tier));
+  if (ups.length && roll < DROP_GEAR) { const g = pick(r, ups); takeGear(S, pl, g.id); return { pid: p, gear: g.id, clean }; }
+  if (roll < DROP_GEAR + DROP_ITEM || clean) { const x = grantItem(S, pl, r); logp(S, `${pl.name} picked up a ${PACK.items.find(i => i.id === x.item).name}${x.sold ? ` (bag full: sold for ${TH().currency}20)` : ""}.`); return { pid: p, ...x, clean }; }
+  return null;
 }
 function reopenWork(S) { for (const id in S.map.tiles) if (S.map.tiles[id].type === "work") S.map.tiles[id].done = false; }
 function cNext(S, r) {
@@ -2089,7 +2186,8 @@ function titleView() {
       <p><b>${esc(TH().livesName)}:</b> every ${PTO_ACCRUE} right answers (team total) accrue +1, up to ${PTO_ACCRUE_MAX} per run.</p>
       <p><b>Gear:</b> each player wears one weapon (Mouse or Notebook) and one outfit (Business Professional, Business Casual, Smart Casual). ★ Common gear is stats only. ★★ Rare and ★★★ Epic gear add study perks: no-hint bonuses, retrying missed questions, drilling your weakest chapter, and cross-training. Buy gear at the ${esc(TH().tiles.shop)}, or earn it at the ${esc(TH().tiles.essay)} — a short answer where better answers earn rarer gear.</p>
       <p><b>Combat:</b> every player gets their own question at the same time. Each correct answer adds that player's attack. Matching your job's topic = ×1.25. All correct (2+ players) = PERFECT ×1.25.</p>
-      <p><b>Performance bars:</b> every fight has a deadline. The first rooms need about 60% correct; rooms farther in need more; the final boss needs 90%. Miss a deadline and you lose a ${esc(lifeWord())}; miss the final one and everyone is fired.</p>
+      <p><b>${esc(TH().tiles.enemy)} fights:</b> short, low-stress practice — ${TRAIN_QS(1)} questions solo, 3–4 each on a team. They need only 40–50% correct, hit softer, and cost no ${esc(lifeWord())} if you miss the deadline. Wins pay a bounty and can drop an item or gear; a clean win (80%+ right) always drops something. Bigger teams face tougher rivals.</p>
+      <p><b>Performance bars:</b> dungeon fights are the real test. The first rooms need about 60% correct; rooms farther in need more; the final boss needs 90%. Miss a dungeon deadline and you lose a ${esc(lifeWord())}; miss the final one and everyone is fired.</p>
       <p><b>Getting hit:</b> the enemy swings at everyone each round. Miss = full hit. Correct = 50% chance to dodge, otherwise half damage. At 0 HP you burn a ${esc(TH().livesName.replace(/s$/, ""))}; with none left, ${esc(TH().loseText.toLowerCase())}</p>
       <p><b>The map:</b> drag to explore. Find ${esc(TH().tiles.cache)} items, shop at the ${esc(TH().tiles.shop)}, and hire helpers at the ${esc(TH().tiles.recruit)}. Then clear the ${esc(TH().dungeons[0])}, the ${esc(TH().dungeons[1])}, and finally ${esc(TH().dungeons[2])} — each is a chain of fights.</p>
       <p><b>${esc(TH().chaosName)}:</b> fills each turn and with wrong answers. When it is full, layoffs hit the whole team.</p>
@@ -2505,8 +2603,8 @@ function revealBody(view) {
   let h = `<div class="box"><div class="reel">${S.order.map((p, i) => { const x = R.per[p];
     return `<div class="r ${x.ok ? "ok" : ""}" style="animation-delay:${i * 0.12}s"><div><b>${esc(nm(S, p))}</b></div><div style="font-size:24px">${x.appealed ? "⚖" : x.ok ? "✓" : "✗"}</div>${x.appealed ? `<div class="small">appeal won</div>` : ""}<div class="small">${x.ok ? `${x.dmg} dmg${x.match ? " · job ×1.25" : ""}<br>` : ""}${x.perks && x.perks.length ? esc(x.perks.join(" · ")) + "<br>" : ""}${C.over === "win" ? "" : x.dodged ? "dodged!" : x.guarded ? "guard blocked" : x.blocked ? "shield blocked" : x.hit ? `took ${x.hit}${x.half ? " (½)" : ""}` : ""}${x.pto ? " · PTO used" : ""}${x.ko ? " · out" : ""}</div></div>`; }).join("")}</div>`;
   h += `<p style="font-size:20px"><b>${R.perfect ? "PERFECT! ×1.25 — " : ""}${R.total} damage</b> to ${esc(E.name)}.</p>`;
-  if (C.over === "win") h += `<div class="banner"><b>${esc(E.name)} is out of the office!</b> ${C.final ? esc(TH().winText) : C.nextRoom ? "Next room — no break." : ""}${C.pay ? ` Bounty: +${money(C.pay)}.` : ""}</div>`;
-  if (C.over === "deadline") h += `<div class="banner"><b>Deadline missed.</b> ${esc(E.name)} holds the room. −1 ${esc(lifeWord())}. You get pushed back into the hall${C.dungeon ? " (rooms you cleared stay cleared)" : ""}. The bar here is ${Math.round(C.bar * 100)}% — the team hit ${C.qTot ? Math.round(C.okTot / C.qTot * 100) : 0}%.</div>`;
+  if (C.over === "win") h += `<div class="banner"><b>${esc(E.name)} is out of the office!</b> ${C.final ? esc(TH().winText) : C.nextRoom ? "Next room — no break." : ""}${C.pay ? ` Bounty: +${money(C.pay)}.` : ""}${C.drop ? ` <br>Drop for ${esc(nm(S, C.drop.pid))}${C.drop.clean ? " (clean win)" : ""}: <b>${C.drop.gear ? `${esc(gearById(C.drop.gear).name)} — ${gearTag(gearById(C.drop.gear))}, equipped` : `${esc((PACK.items.find(i => i.id === C.drop.item) || {}).name || "item")}${C.drop.sold ? " (bag full: sold)" : ""}`}</b>.` : ""}</div>`;
+  if (C.over === "deadline") h += `<div class="banner"><b>Deadline missed.</b> ${esc(E.name)} holds the room. ${C.train ? "Training fight: no PTO lost." : `−1 ${esc(lifeWord())}.`} You get pushed back into the hall${C.dungeon ? " (rooms you cleared stay cleared)" : ""}. The bar here is ${Math.round(C.bar * 100)}% — the team hit ${C.qTot ? Math.round(C.okTot / C.qTot * 100) : 0}%.</div>`;
   if (C.over === "lose") h += `<div class="banner"><b>${S.why === "final" ? `Missed the final deadline (bar ${Math.round(C.bar * 100)}%, team ${C.qTot ? Math.round(C.okTot / C.qTot * 100) : 0}%).` : `No ${esc(TH().livesName)} left.`}</b> ${esc(TH().loseText)}</div>`;
   const mine = C.qs[view], show = NET.mode === "local" ? S.order : [view];
   h += show.map(p => { const q = C.qs[p], x = R.per[p]; if (!q || q.hidden) return "";
@@ -2633,8 +2731,9 @@ function fightOdds(bar, kind, n, acc, trials) {
     const sim = newGame("F" + bar + kind + n + acc + k, "SIM"); sim.local = true; const r = rngFor(sim.seed, "bot");
     for (let i = 1; i <= n; i++) { reduce(sim, { type: "JOIN", pid: "p" + i, name: "B" + i, now: 0 }); reduce(sim, { type: "PICK", pid: "p" + i, cls: pick(r, PACK.classes).id, now: 0 }); }
     reduce(sim, { type: "START", now: 0 }); sim.lives = 99;
-    const t = sim.map.tiles[sim.map.dungeons[2]], e = PACK.enemies.find(x => kind === "boss" ? x.boss : kind === "elite" ? x.elite : !x.boss && !x.elite);
-    t.rooms = [{ enemy: e.id, bar }]; t.progress = 0;
+    const e = PACK.enemies.find(x => kind === "boss" ? x.boss : kind === "elite" ? x.elite : !x.boss && !x.elite);
+    let t; if (kind === "rival") { t = Object.values(sim.map.tiles).find(x => x.type === "enemy"); t.enemy = e.id; t.bar = bar; t.tier = 0; }
+    else { t = sim.map.tiles[sim.map.dungeons[2]]; t.rooms = [{ enemy: e.id, bar }]; t.progress = 0; }
     startCombat(sim, t.id, rr(sim));
     let guard = 0;
     while (sim.phase === "combat" && !sim.combat.over && guard++ < 500) {
@@ -2678,6 +2777,7 @@ function runTests() {
   out.byPlayers = Object.fromEntries(Object.entries(byN).map(([n, xs]) => { const m = xs.map(x => x.min).sort((a, b) => a - b);
     return [n, { winRate: Math.round(xs.filter(x => x.win).length / xs.length * 100) + "%", medianMin: +m[m.length >> 1].toFixed(1), minMin: +m[0].toFixed(1), maxMin: +m[m.length - 1].toFixed(1), avgRounds: +(xs.reduce((a, x) => a + x.rounds, 0) / xs.length).toFixed(1), avgCombats: +(xs.reduce((a, x) => a + x.combats, 0) / xs.length).toFixed(1), avgTurns: +(xs.reduce((a, x) => a + x.turns, 0) / xs.length).toFixed(1), dungeons: [0, 1, 2, 3].map(d => xs.filter(x => x.dcleared === d).length).join("/"), why: ["hp", "deadline", "layoffs", "final"].map(w => w + ":" + xs.filter(x => !x.win && x.why === w).length).join(" ") }]; }));
   out.barOdds = {};
+  if (part === "all" || part === "odds" || part === "rival") for (const n of [1, 2, 3, 4, 6]) { const row = {}; for (const acc of [0.3, 0.4, 0.5, 0.6, 0.75]) row[Math.round(acc * 100) + "%"] = fightOdds(REGION_BARS[0], "rival", n, acc, 200); out.barOdds[`n${n} rival bar40`] = row; }
   if (part === "all" || part === "odds") for (const n of [1, 3, 6]) for (const [bar, kind] of [[0.6, "normal"], [0.8, "elite"], [0.9, "boss"]]) { const row = {}; for (const acc of [0.5, 0.6, 0.7, 0.8, 0.9, 0.95]) row[Math.round(acc * 100) + "%"] = fightOdds(bar, kind, n, acc, 100); out.barOdds[`n${n} bar${bar * 100} ${kind}`] = row; }
   // map sanity
   let mapBad = 0; for (let k = 0; k < 200; k++) { const m = genMap("M" + k), T = m.tiles, d = bfs(m.start, T);
@@ -2686,6 +2786,15 @@ function runTests() {
   ok(!mapBad, "200 maps connected, 3 dungeons, rivals, job fairs, caches; HQ far away (" + mapBad + " bad)");
   // determinism
   ok(JSON.stringify(simulate("DET", 3, 0.7)) === JSON.stringify(simulate("DET", 3, 0.7)), "same seed → same run");
+  { let qn = 0, drops = 0, noPTO = true, bad = "";
+    for (let k = 0; k < 40; k++) { const sim = newGame("RV" + k, "SIM"); sim.local = true; const r = rngFor(sim.seed, "bot");
+      for (let i = 1; i <= 3; i++) { reduce(sim, { type: "JOIN", pid: "p" + i, name: "B" + i, now: 0 }); reduce(sim, { type: "PICK", pid: "p" + i, cls: PACK.classes[i % PACK.classes.length].id, now: 0 }); }
+      reduce(sim, { type: "START", now: 0 }); const t = Object.values(sim.map.tiles).find(x => x.type === "enemy"), lives = sim.lives, acc = k % 2 ? 1 : 0;
+      startCombat(sim, t.id, rr(sim)); qn = Math.max(qn, sim.combat.rounds);
+      let g = 0; while (sim.phase === "combat" && !sim.combat.over && g++ < 200) { const C = sim.combat; if (C.step === "reveal") { reduce(sim, { type: "NEXT", round: C.round, now: 0 }); continue; } for (const p of sim.order) if (C.ans[p] === undefined) reduce(sim, { type: "ANSWER", pid: p, i: acc ? C.qs[p].ans : (C.qs[p].ans + 1) % C.qs[p].opts.length, now: 0 }); }
+      if (sim.combat.drop) drops++; if (!acc && sim.lives < lives && sim.combat.over === "deadline") noPTO = false;
+      const keep = S; S = sim; try { revealBody("p1"); } catch (e) { bad = e.message; } S = keep; }
+    ok(qn <= 5 && drops === 20 && noPTO && !bad, `rival fights: ≤5 questions (${qn}), clean wins always drop (${drops}/20), a missed rival costs no PTO, reveal renders${bad ? " — " + bad : ""}`); }
   // redaction
   S = newGame("RED", "ABCD"); ["p1", "p2"].forEach(p => reduce(S, { type: "JOIN", pid: p, name: p, now: 1 })); S.order.forEach(p => reduce(S, { type: "PICK", pid: p, cls: PACK.classes[0].id, now: 1 }));
   reduce(S, { type: "START", now: 1 }); const ce = Object.values(S.map.tiles).find(t => t.type === "enemy"); startCombat(S, ce.id, rr(S)); beginRound(S, rr(S));
