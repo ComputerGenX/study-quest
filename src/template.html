@@ -1,0 +1,1964 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Study Quest</title>
+<meta name="description" content="Co-op study board game for 1–6 players. Answer your own questions, combine your answers into damage, and try not to get fired.">
+<meta property="og:title" content="Study Quest — try not to get fired">
+<meta property="og:description" content="Co-op study game for MGMT 660 Exam 2 (IHRM Ch 4–7). Tap to play in your browser, no download.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://computergenx.github.io/study-quest/">
+<meta name="theme-color" content="#fbfaf5">
+<style>
+/*@@CSS@@*/
+/* ---------- Study Quest additions ---------- */
+.center{text-align:center}
+.logo{display:flex;align-items:center;gap:14px;justify-content:center;flex-wrap:wrap}
+.tagline{font-size:20px;margin-top:0}
+.stack{display:grid;gap:12px}
+.hud{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:4px 0 12px}
+.chip{display:inline-flex;gap:6px;align-items:center;border:2px solid var(--ink);border-radius:999px;padding:2px 10px;background:#fff;font-size:14px;white-space:nowrap}
+.chip.dark{background:var(--ink);color:#fff}
+.meter{display:inline-flex;gap:2px}
+.meter i{width:9px;height:14px;border:2px solid var(--ink);border-radius:3px;background:#fff}
+.meter i.on{background:var(--ink)}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:14px;align-items:start}
+@media (max-width:780px){.layout{grid-template-columns:minmax(0,1fr)}}
+.board{padding:6px}
+.board{position:relative}
+.board svg{width:100%;height:min(62vh,520px);display:block;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.board svg:active{cursor:grabbing}
+.zoom{position:absolute;right:10px;top:10px;display:flex;gap:6px}
+.hex.can{cursor:pointer}
+.hex.can polygon{stroke-dasharray:6 4;stroke-width:4}
+.party{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:14px}
+.pcard{border:2.5px solid var(--ink);border-radius:12px 6px 14px 5px;background:#fff;padding:6px 8px 8px;box-shadow:3px 3px 0 var(--ink);font-size:14px}
+.pcard.me{outline:3px dashed var(--ink);outline-offset:3px}
+.pcard.off{opacity:.55}
+.pcard .top{display:flex;gap:6px;align-items:center}
+.pcard b{font-size:15px}
+.pips{letter-spacing:2px}
+.slots{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.slot{width:46px;height:46px;border:2.5px solid var(--ink);border-radius:50% 46% 52% 48%;display:grid;place-items:center;font-size:20px;background:#fff;font-weight:bold}
+.slot.ok{background:var(--ink);color:#fff}
+.slot.spin{animation:spin .6s ease-out}
+@keyframes spin{0%{transform:rotateX(0) scale(.6)}60%{transform:rotateX(540deg) scale(1.1)}100%{transform:rotateX(720deg) scale(1)}}
+.reel{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+.reel .r{border:2.5px solid var(--ink);border-radius:10px 4px 12px 4px;padding:6px 8px;min-width:96px;text-align:center;background:#fff;animation:spin .6s ease-out both}
+.reel .r.ok{background:var(--ink);color:#fff}
+.code{font-size:46px;letter-spacing:10px;font-weight:bold;line-height:1}
+.timer{font-size:22px;font-weight:bold;min-width:46px;display:inline-block;text-align:right}
+.foe{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.foe .info{flex:1;min-width:180px}
+.cover{text-align:center;padding:36px 10px}
+.classes{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.ccard{border:2.5px solid var(--ink);border-radius:12px 6px 14px 5px;background:#fff;padding:8px 10px;box-shadow:3px 3px 0 var(--ink);cursor:pointer;font:inherit;color:var(--ink);text-align:left}
+.ccard.sel{outline:3px dashed var(--ink);outline-offset:3px}
+.ccard .sal{font-size:20px;font-weight:bold}
+.ccard svg{float:right}
+.plist{display:flex;flex-direction:column;gap:6px}
+.plist div{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.log{font-size:13px;color:var(--mid);margin-top:10px}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:8px 14px;border-radius:10px;z-index:9;font-size:15px;max-width:90vw}
+.err{border:2.5px dashed var(--ink);padding:8px 12px;border-radius:10px;background:#fff;margin:8px 0}
+.err li{margin:2px 0}
+details summary{cursor:pointer}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;margin-top:8px}
+.legend span{display:inline-flex;gap:4px;align-items:center}
+input.codein{text-transform:uppercase;letter-spacing:6px;font-size:22px;width:150px;text-align:center}
+.spacer{height:10px}
+.gearrow{display:flex;gap:4px;flex-wrap:wrap;margin:4px 0}
+.gchip{font:inherit;font-size:12px;border:1.8px solid var(--ink);border-radius:8px;padding:1px 6px;background:#fff;color:var(--ink);cursor:pointer}
+.gchip.none{border-style:dashed;color:var(--mid);cursor:default}
+.gchip.t2{border-width:2.5px}
+.gchip.t3{background:var(--ink);color:#fff}
+.gearbtn.t2{border-width:3px}
+.gearbtn.t3{outline:2.5px dashed var(--ink);outline-offset:2px}
+.btn.on{background:var(--ink);color:#fff}
+.calc{margin:12px 0 4px;max-width:300px;border:2.5px solid var(--ink);border-radius:14px 10px 16px 9px;background:#fff;box-shadow:3px 4px 0 var(--ink);padding:8px;transform:rotate(-.4deg)}
+.calc .ct{font-size:13px;font-weight:bold;margin-bottom:6px}
+.calc .cd{border:2px solid var(--ink);border-radius:8px 6px 9px 5px;padding:4px 8px;text-align:right;min-height:46px;background:#fbfaf5}
+.calc .ce{font-size:14px;color:var(--mid);word-break:break-all;min-height:18px}
+.calc .co{font-size:20px;font-weight:bold;min-height:24px}
+.calc .ck{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:7px}
+.calc .ck button{font:inherit;font-size:17px;border:2px solid var(--ink);border-radius:9px 7px 10px 6px;background:#fff;color:var(--ink);padding:6px 0;cursor:pointer;box-shadow:1.5px 2px 0 var(--ink)}
+.calc .ck button:active{transform:translate(1px,1px);box-shadow:none}
+.calc .ck .op{background:#f1efe6}.calc .ck .eq{background:var(--ink);color:#fff}
+.why{font-size:13px;margin:2px 0 8px 4px}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="wob"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.6"/></filter>
+  <pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" fill="#fff"/><line x1="0" y1="0" x2="0" y2="7" stroke="#111" stroke-width="1.6"/></pattern>
+</svg>
+<div id="nojs" style="max-width:560px;margin:40px auto;padding:24px;border:3px solid #111;border-radius:14px;background:#fff;text-align:center;font-family:-apple-system,Helvetica,Arial,sans-serif;color:#111">
+  <div style="font-size:34px;font-weight:bold;letter-spacing:1px">STUDY QUEST</div>
+  <p style="font-size:18px">This preview can't run the game.</p>
+  <p style="font-size:18px">Tap the link to play in your browser:</p>
+  <p style="font-size:22px;font-weight:bold"><a href="https://computergenx.github.io/study-quest/" style="color:#111">computergenx.github.io/study-quest</a></p>
+  <p style="font-size:14px;color:#555">On a phone, the game only works from that link.</p>
+</div>
+<div id="app"></div>
+<div id="toast" class="toast" hidden></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js"></script>
+<script>
+"use strict";
+document.getElementById("nojs").remove(); // shown only where scripts cannot run (e.g. iPhone file preview)
+/* ============================================================
+   STUDY QUEST — a co-op study board game for 1–6 players.
+   Questions and theme come from a "pack" (JSON). The Compensation
+   Ch 7–11 pack is built in. Make new packs with the Pack Maker page.
+   ============================================================ */
+const SITE_URL = "https://computergenx.github.io/study-quest/";
+const PACK_MAKER_URL = "https://claude.ai/artifact/MzqXBPQ5bdzYxNGD6SFmkL";
+const QS = new URLSearchParams(location.search);
+
+/* ---------- storage (safe) ---------- */
+const KEY = "studyquest.v1." + (QS.get("sid") || "");
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(KEY + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(KEY + k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem(KEY + k); } catch (e) {} }
+};
+
+/* ---------- seeded RNG ---------- */
+function xmur(str) { let h = 1779033703 ^ str.length; for (let i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = h << 13 | h >>> 19; } h = Math.imul(h ^ h >>> 16, 2246822507); h = Math.imul(h ^ h >>> 13, 3266489909); return (h ^ h >>> 16) >>> 0; }
+function rngFor(seed, stream) { let a = xmur(seed + "|" + stream); return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function shuffle(arr, r) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function newSeed() { const c = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let s = ""; for (let i = 0; i < 6; i++) s += c[Math.floor(Math.random() * c.length)]; return s; }
+function roomCode() { const c = "ABCDEFGHJKLMNPQRSTUVWXYZ"; let s = ""; for (let i = 0; i < 4; i++) s += c[Math.floor(Math.random() * c.length)]; return s; }
+const pick = (r, a) => a[Math.floor(r() * a.length)];
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+/* ---------- Compensation Ch 7–11 content (copied from Compémon) ---------- */
+/*@@DATA@@*/
+
+/* ---------- doodle parts (copied from Compémon) ---------- */
+/*@@ART@@*/
+const ART = { body: Object.keys(BODY), ears: Object.keys(EARS), eyes: Object.keys(EYES).filter(k => k !== "ko"), mouth: Object.keys(MOUTH), pat: Object.keys(PAT), acc: Object.keys(ACC) };
+const HEAD_POS = [[-8, 10], [30, 2], [11, -8]];
+/* Hand-drawn enemy pictures that packs can pick with art.pic (raster art, so no wobble filter). */
+const PICS = { ceo: "/*@@CEO@@*/" };
+function enemySVG(art, size = 110, ko = false, boss = false) {
+  if (art.pic && PICS[art.pic]) return `<svg viewBox="-8 -22 116 122" width="${size}" height="${size}" class="mon"><image href="${PICS[art.pic]}" x="-8" y="-22" width="116" height="122" preserveAspectRatio="xMidYMid meet" ${ko ? 'opacity=".35" style="filter:grayscale(1)"' : ""}/>${ko ? `<path d="M20 10 L80 80 M80 10 L20 80" stroke="#111" stroke-width="5" stroke-linecap="round"/>` : ""}</svg>`;
+  const inner = art.heads ? art.heads.map((h, i) => `<g transform="translate(${HEAD_POS[i][0]},${HEAD_POS[i][1]}) scale(.78)">${drawParts({ ...art, ...h }, ko)}</g>`).join("") : drawParts(art, ko);
+  return `<svg viewBox="-8 -22 116 122" width="${size}" height="${size}" class="mon"><g filter="url(#wob)" stroke="#111" stroke-width="${boss ? 3.2 : 2.8}" stroke-linecap="round" stroke-linejoin="round" fill="#fff">${inner}</g></svg>`;
+}
+/* people (player classes) */
+const HATS = {
+  none: () => "",
+  cap: () => `<path d="M20 14 Q30 0 40 14Z" fill="#111"/><path d="M38 13 L48 15" fill="none"/>`,
+  bun: () => `<circle cx="30" cy="5" r="5"/>`,
+  hardhat: () => `<path d="M19 15 Q19 3 30 3 Q41 3 41 15Z"/><path d="M15 15 L45 15" fill="none"/>`,
+  beanie: () => `<path d="M20 14 Q20 3 30 3 Q40 3 40 14Z" fill="#111"/><circle cx="30" cy="2" r="2.5"/>`,
+  visor: () => `<path d="M20 12 L40 12 L48 16" fill="none" stroke-width="4"/>`,
+  headset: () => `<path d="M19 18 Q19 5 30 5 Q41 5 41 18" fill="none"/><rect x="16" y="15" width="5" height="8" rx="2" fill="#111"/><path d="M19 23 Q22 29 27 28" fill="none"/>`
+};
+const PROPS = {
+  clipboard: () => `<rect x="44" y="22" width="12" height="15" rx="2"/><path d="M47 27 L53 27 M47 31 L53 31" fill="none" stroke-width="1.5"/>`,
+  briefcase: () => `<rect x="42" y="38" width="16" height="12" rx="2"/><path d="M47 38 L47 35 L53 35 L53 38" fill="none"/>`,
+  mug: () => `<rect x="44" y="24" width="9" height="11" rx="2"/><path d="M53 27 Q58 29 53 33" fill="none"/><path d="M46 21 Q48 18 46 15 M50 21 Q52 18 50 15" fill="none" stroke-width="1.5"/>`,
+  phone: () => `<rect x="45" y="20" width="7" height="12" rx="2" fill="#111"/>`,
+  laptop: () => `<path d="M40 30 L54 30 L56 40 L42 40 Z"/><path d="M38 41 L58 41" fill="none"/>`,
+  megaphone: () => `<path d="M44 30 L56 24 L56 38 Z"/><path d="M44 28 L44 33" fill="none"/>`,
+  book: () => `<path d="M42 26 L50 29 L58 26 L58 38 L50 41 L42 38 Z M50 29 L50 41" />`,
+  calculator: () => `<rect x="44" y="22" width="12" height="16" rx="2"/><rect x="46" y="24" width="8" height="4" fill="#111" stroke="none"/><path d="M47 31 h1 M50 31 h1 M53 31 h1 M47 35 h1 M50 35 h1 M53 35 h1" stroke-width="1.6"/>`,
+  scales: () => `<path d="M50 20 L50 40 M42 24 L58 24 M42 24 L39 31 M42 24 L45 31 M58 24 L55 31 M58 24 L61 31 M38 31 Q42 35 46 31 M54 31 Q58 35 62 31 M46 40 L54 40" fill="none" stroke-width="2"/>`,
+  chart: () => `<rect x="42" y="20" width="16" height="16" rx="2"/><path d="M45 33 L45 29 M49 33 L49 26 M53 33 L53 23" stroke-width="2.4"/>`
+};
+function personSVG(art, size = 70, ko = false) {
+  art = art || {};
+  const hat = (HATS[art.hat] || HATS.none)(), prop = (PROPS[art.prop] || PROPS.clipboard)();
+  const face = ko ? `<path d="M24 15 L28 19 M28 15 L24 19 M32 15 L36 19 M36 15 L32 19" fill="none" stroke-width="1.5"/><path d="M26 24 L34 24" fill="none"/>` : `<circle cx="26" cy="18" r="1.4" fill="#111"/><circle cx="34" cy="18" r="1.4" fill="#111"/><path d="M26 23 Q30 26 34 23" fill="none"/>`;
+  return `<svg viewBox="0 0 60 90" width="${Math.round(size * 0.67)}" height="${size}" class="mon"><g filter="url(#wob)" stroke="#111" stroke-width="3" fill="#fff" stroke-linecap="round" stroke-linejoin="round"><circle cx="30" cy="18" r="10"/>${hat}<path d="M30 28 L30 58 M30 36 L16 48 M30 36 L46 30 M30 58 L20 82 M30 58 L40 82" fill="none"/>${face}${prop}</g></svg>`;
+}
+const CLASS_ART = { hat: Object.keys(HATS), prop: Object.keys(PROPS) };
+
+/* ============================================================
+   PACKS
+   ============================================================ */
+const FX_OPS = { heal: "Heal", maxhp: "Max HP", shield: "Shield", focus: "Focus", gold: "Payroll", chaos: "Meter", dmgBuff: "Damage %", lives: "Lives", rounds: "Deadline + rounds", cut: "Enemy HP −%", reroll: "New question" };
+const COMBAT_OPS = ["rounds", "cut", "reroll"]; // only usable while answering in a fight
+const PERKS = { none: "No perk.", move: "+1 movement slot when rolling.", heal: "Heals the whole team 6 HP on each correct answer.", tough: "Takes 25% less damage.", focus: "+2 max focus. Gets 1 focus back after each win.",
+  gold: "+10 Payroll after each win.", scout: "The team sees 1 room farther on the map.", shield: "Starts every fight with a shield (blocks 1 hit).", appeal: "Once per fight, the team's first wrong answer is overturned on appeal." };
+const HIRE_OPS = { atk: "+N attack for everyone.", guard: "Blocks the first N hit(s) in every fight.", regen: "Heals the team N HP every round.", focus: "+N focus for everyone after each win.", gold: "+N Payroll after each win." };
+const DEFAULT_HIRES = [
+  { id: "temp", name: "Temp Accountant", cost: 50, fx: [{ op: "atk", n: 3 }], desc: "+3 attack for everyone.", art: { hat: "none", prop: "calculator" } },
+  { id: "guard", name: "Security Guard", cost: 45, fx: [{ op: "guard", n: 1 }], desc: "Blocks the first hit in every fight.", art: { hat: "cap", prop: "phone" } },
+  { id: "om", name: "Office Manager", cost: 40, fx: [{ op: "regen", n: 4 }], desc: "Heals the team 4 HP every round.", art: { hat: "bun", prop: "mug" } },
+  { id: "ea", name: "Executive Assistant", cost: 40, fx: [{ op: "focus", n: 1 }], desc: "+1 focus for everyone after each win.", art: { hat: "headset", prop: "clipboard" } },
+  { id: "intern", name: "Summer Intern", cost: 30, fx: [{ op: "gold", n: 12 }], desc: "+12 Payroll after each win.", art: { hat: "cap", prop: "mug" } }
+];
+/* ---------- economy ---------- */
+const SIGN_ON = 20, BOUNTY_BASE = 15, BOUNTY_TIER = 8, BOUNTY_PER_RIGHT = 2; // start small; earn money by fighting and working
+const TUTOR_PAY = 6, TUTOR_PART = 3;                                            // Employer 1-1: all choices right = $6 + 1 focus; 70%+ right = $3
+const WORK_PAY = 8, WORK_PERFECT = 6, SHIFT_QS = 3;                        // Overtime Desk: 3 questions, $8 each, +$6 for 3/3
+const PTO_ACCRUE = 20, PTO_ACCRUE_MAX = 2;                                 // +1 PTO day per 20 correct team answers, up to 2 a run
+/* ---------- equipment: one weapon + one armor per player. Tier 1 = stats only; tiers 2–3 add study perks. ---------- */
+const RARITY = ["", "Common", "Rare", "Epic"];
+const GEAR = [
+  { id: "mouse1", slot: "weapon", line: "Mouse", tier: 1, name: "Wired Mouse", cost: 35, atk: 1 },
+  { id: "mouse2", slot: "weapon", line: "Mouse", tier: 2, name: "Side-Button Mouse", cost: 70, atk: 2, nohint: 20 },
+  { id: "mouse3", slot: "weapon", line: "Mouse", tier: 3, name: "Ergonomic Mouse", cost: 0, atk: 3, nohint: 30, flow: 10 },
+  { id: "notes1", slot: "weapon", line: "Notebook", tier: 1, name: "Spiral Notebook", cost: 35, atk: 1, focus: 1 },
+  { id: "notes2", slot: "weapon", line: "Notebook", tier: 2, name: "Cornell Notes Pad", cost: 70, atk: 1, focus: 1, retry: 50 },
+  { id: "notes3", slot: "weapon", line: "Notebook", tier: 3, name: "Second-Brain Tablet", cost: 0, atk: 2, focus: 2, retry: 100, retryFocus: 1 },
+  { id: "pro1", slot: "armor", line: "Business Professional", tier: 1, name: "Off-the-Rack Suit", cost: 35, def: 5 },
+  { id: "pro2", slot: "armor", line: "Business Professional", tier: 2, name: "Pressed Suit & Tie", cost: 70, def: 10, prepared: 0.25 },
+  { id: "pro3", slot: "armor", line: "Business Professional", tier: 3, name: "Tailored Three-Piece", cost: 0, def: 15, prepared: 0.35 },
+  { id: "cas1", slot: "armor", line: "Business Casual", tier: 1, name: "Polo & Khakis", cost: 35, hp: 8 },
+  { id: "cas2", slot: "armor", line: "Business Casual", tier: 2, name: "Quarter-Zip & Chinos", cost: 70, hp: 15, weak: 6, lean: 0.35 },
+  { id: "cas3", slot: "armor", line: "Business Casual", tier: 3, name: "Blazer & Chinos", cost: 0, hp: 22, weak: 10, lean: 0.5, weakFocus: 1 },
+  { id: "smart1", slot: "armor", line: "Smart Casual", tier: 1, name: "Dark Jeans & Blazer", cost: 35, focus: 1 },
+  { id: "smart2", slot: "armor", line: "Smart Casual", tier: 2, name: "Knit Polo & Loafers", cost: 70, focus: 1, cross: 1 },
+  { id: "smart3", slot: "armor", line: "Smart Casual", tier: 3, name: "Designer Smart Casual", cost: 0, focus: 2, cross: 1, refund: 1 }
+];
+const gearById = id => GEAR.find(g => g.id === id);
+function gearText(g) {
+  const s = [];
+  if (g.atk) s.push(`+${g.atk} attack`); if (g.def) s.push(`${g.def}% less damage taken`); if (g.hp) s.push(`+${g.hp} max HP`); if (g.focus) s.push(`+${g.focus} max focus`);
+  if (g.nohint) s.push(`No hints: +${g.nohint}% damage when you answer right without a lifeline`);
+  if (g.flow) s.push(`Flow state: +${g.flow}% damage for each right answer in a row this fight (max +50%)`);
+  if (g.retry) s.push(`Retrieval practice: questions you miss come back later in the fight; a right retry deals +${g.retry}% damage${g.retryFocus ? " and gives +1 focus" : ""}`);
+  if (g.prepared) s.push(`Due diligence: right with no lifeline = +${Math.round(g.prepared * 100)}% dodge chance`);
+  if (g.weak) s.push(`Weak-spot drills: ${Math.round(g.lean * 100)}% of your questions come from your weakest chapter; right answers there heal ${g.weak} HP${g.weakFocus ? " and give +1 focus" : ""}`);
+  if (g.cross) s.push("Cross-training: right answers in ANY chapter get your job bonus");
+  if (g.refund) s.push("Show your work: a lifeline refunds 1 focus when you then answer right");
+  return s.join(". ") + ".";
+}
+const gearOf = (pl, slot) => pl.gear && pl.gear[slot] ? gearById(pl.gear[slot]) : null;
+const gearSum = (pl, k) => ["weapon", "armor"].reduce((a, s) => { const g = gearOf(pl, s); return a + (g && g[k] ? g[k] : 0); }, 0);
+const gearTag = g => `${"★".repeat(g.tier)} ${RARITY[g.tier]}`;
+/* Put gear on; returns the piece it replaced (traded in for a little cash by the caller). */
+function equip(pl, id) {
+  const g = gearById(id); if (!g) return null; pl.gear = pl.gear || {};
+  const old = gearOf(pl, g.slot), o = old || {};
+  pl.atk += (g.atk || 0) - (o.atk || 0);
+  pl.max += (g.hp || 0) - (o.hp || 0); pl.hp = clamp(pl.hp + (g.hp || 0) - (o.hp || 0), 1, pl.max);
+  pl.maxFocus += (g.focus || 0) - (o.focus || 0); pl.focus = clamp(pl.focus + (g.focus || 0) - (o.focus || 0), 0, 9);
+  pl.gear[g.slot] = id; return old;
+}
+/* Short answers: each rubric line scores if any of its patterns appears (or `count` patterns × `each`). Under 12 words caps the score. */
+function gradeSA(sa, text) {
+  const t = String(text || "").toLowerCase(), words = t.split(/\s+/).filter(Boolean).length; let got = 0, tot = 0;
+  const items = sa.rub.map(rb => { let g = 0;
+    if (rb.count) g = Math.min(rb.p, rb.count.filter(k => k.test(t)).length * rb.each); else if (rb.re.some(k => k.test(t))) g = rb.p;
+    got += g; tot += rb.p; return { l: rb.l, ok: Math.round(g * 10) / 10, p: rb.p }; });
+  let score = tot ? got / tot : 0; if (words < 12) score = Math.min(score, 0.35);
+  return { score, items, words };
+}
+const saTier = s => s >= 0.7 ? 3 : s >= 0.4 ? 2 : s > 0 ? 1 : 0;
+const DEFAULT_THEME = {
+  gameTitle: "Study Quest", tagline: "Try not to get fired.", currency: "$", goldName: "Payroll", livesName: "PTO days", chaosName: "Layoff Meter",
+  winText: "You survived the fiscal year!", loseText: "Everyone's fired.",
+  dungeons: ["Subsidiary", "Manufacturing Plant", "Corporate HQ"],
+  tiles: { start: "HR Lobby", enemy: "Rival", shop: "Supply Closet", rest: "Break Room", review: "Performance Review", cache: "Lost & Found", recruit: "Job Fair", chest: "Locked Filing Cabinet", work: "Overtime Desk", essay: "Training Workshop", tutor: "Employer 1-1", hall: "Hallway" }
+};
+const str = (x, n = 400) => typeof x === "string" && x.trim() ? x.trim().slice(0, n) : "";
+const num = (x, a, b, d) => { const v = Number(x); return Number.isFinite(v) ? clamp(Math.round(v), a, b) : d; };
+function cleanArt(a) {
+  a = a && typeof a === "object" ? a : {};
+  const o = { body: ART.body.includes(a.body) ? a.body : "round", ears: ART.ears.includes(a.ears) ? a.ears : "none", eyes: ART.eyes.includes(a.eyes) ? a.eyes : "dot",
+    mouth: ART.mouth.includes(a.mouth) ? a.mouth : "smile", pat: ART.pat.includes(a.pat) ? a.pat : null,
+    acc: (Array.isArray(a.acc) ? a.acc : []).filter(x => ART.acc.includes(x)).slice(0, 2), tail: a.tail ? 1 : 0 };
+  if (PICS[a.pic]) o.pic = a.pic;
+  if (Array.isArray(a.heads) && a.heads.length > 1) o.heads = a.heads.slice(0, 3).map(h => { const c = cleanArt({ ...o, ...h, heads: null }); return { ears: c.ears, eyes: c.eyes, mouth: c.mouth, acc: c.acc }; });
+  return o;
+}
+/* Returns {ok, errors[], warnings[], pack}. Pack text is untrusted: everything is escaped at render time and art names are whitelisted. */
+function validatePack(p) {
+  const E = [], W = [];
+  if (!p || typeof p !== "object" || Array.isArray(p)) return { ok: false, errors: ["The file is not a pack (expected a JSON object)."], warnings: [] };
+  if (p.schema !== "studyquest-pack/1") E.push('"schema" must be "studyquest-pack/1".');
+  const m = p.meta && typeof p.meta === "object" ? p.meta : {};
+  const title = str(m.title, 80); if (!title) E.push("meta.title is missing.");
+  const subjects = {};
+  if (m.subjects && typeof m.subjects === "object") for (const [k, v] of Object.entries(m.subjects)) { const kk = str(String(k), 12), vv = str(v, 50); if (kk && vv) subjects[kk] = vv; }
+  const sk = Object.keys(subjects);
+  if (sk.length < 1 || sk.length > 8) E.push("meta.subjects needs 1–8 topics (e.g. {\"1\": \"Supply & Demand\"}).");
+  const th = p.theme && typeof p.theme === "object" ? p.theme : {};
+  const theme = { ...DEFAULT_THEME, tiles: { ...DEFAULT_THEME.tiles }, dungeons: DEFAULT_THEME.dungeons.slice() };
+  for (const k of Object.keys(DEFAULT_THEME)) if (k !== "tiles" && k !== "dungeons" && str(th[k], 60)) theme[k] = str(th[k], 60);
+  if (Array.isArray(th.dungeons)) th.dungeons.slice(0, 3).forEach((d, i) => { if (str(d, 30)) theme.dungeons[i] = str(d, 30); });
+  if (th.tiles && typeof th.tiles === "object") for (const k of Object.keys(DEFAULT_THEME.tiles)) if (str(th.tiles[k], 30)) theme.tiles[k] = str(th.tiles[k], 30);
+  const ids = new Set(), uid = (x, what, i) => { const id = str(String(x == null ? "" : x), 40) || what + i; if (ids.has(id)) { E.push(`Duplicate id "${id}".`); } ids.add(id); return id; };
+  const classes = (Array.isArray(p.classes) ? p.classes : []).slice(0, 8).map((c, i) => {
+    c = c || {}; if (!str(c.name)) E.push(`classes[${i}] needs a name.`);
+    return { id: uid(c.id, "class", i), name: str(c.name, 30) || "Worker", salary: num(c.salary, 1000, 10000000, 50000), hp: num(c.hp, 30, 200, 70), atk: num(c.atk, 4, 40, 12),
+      focus: num(c.focus, 0, 6, 3), subject: sk.includes(String(c.subject)) ? String(c.subject) : null, perk: PERKS[c.perk] ? c.perk : "none",
+      art: { hat: CLASS_ART.hat.includes(c.art && c.art.hat) ? c.art.hat : "none", prop: CLASS_ART.prop.includes(c.art && c.art.prop) ? c.art.prop : "clipboard" }, blurb: str(c.blurb, 120) };
+  });
+  if (classes.length < 3) E.push("Add at least 3 classes.");
+  const enemies = (Array.isArray(p.enemies) ? p.enemies : []).slice(0, 40).map((e, i) => {
+    e = e || {}; if (!str(e.name)) E.push(`enemies[${i}] needs a name.`);
+    const boss = !!e.boss;
+    return { id: uid(e.id, "enemy", i), name: str(e.name, 40) || "Coworker", hp: num(e.hp, 20, 800, boss ? 220 : 70), dmg: num(e.dmg, 3, 60, boss ? 20 : 12),
+      subject: sk.includes(String(e.subject)) ? String(e.subject) : sk[i % Math.max(1, sk.length)], boss, elite: !!e.elite, quip: str(e.quip, 140), art: cleanArt(e.art) };
+  });
+  if (enemies.filter(e => !e.boss).length < 4) E.push("Add at least 4 regular enemies.");
+  if (!enemies.some(e => e.boss)) E.push('Add at least 1 enemy with "boss": true.');
+  const items = (Array.isArray(p.items) ? p.items : []).slice(0, 24).map((it, i) => {
+    it = it || {}; const fx = (Array.isArray(it.fx) ? it.fx : []).filter(f => f && FX_OPS[f.op]).slice(0, 3).map(f => ({ op: f.op, n: num(f.n, -10, 200, 1), who: f.who === "team" ? "team" : "self" }));
+    if (!fx.length) E.push(`items[${i}] needs at least one effect. Allowed ops: ${Object.keys(FX_OPS).join(", ")}.`);
+    return { id: uid(it.id, "item", i), name: str(it.name, 40) || "Thing", cost: num(it.cost, 0, 999, 40), fx, desc: str(it.desc, 120) };
+  });
+  if (!items.length) E.push("Add at least 1 item.");
+  const hseen = new Set();
+  const hires = (Array.isArray(p.hires) && p.hires.length ? p.hires : DEFAULT_HIRES).slice(0, 12).map((h, i) => {
+    h = h || {}; const fx = (Array.isArray(h.fx) ? h.fx : []).filter(f => f && HIRE_OPS[f.op]).slice(0, 2).map(f => ({ op: f.op, n: num(f.n, 1, 50, 1) }));
+    let id = str(String(h.id == null ? "" : h.id), 40) || "hire" + i; while (hseen.has(id)) id += "x"; hseen.add(id);
+    if (!fx.length) W.push(`Hire ${i + 1} has no usable effect and was skipped. Allowed ops: ${Object.keys(HIRE_OPS).join(", ")}.`);
+    return { id, name: str(h.name, 40) || "New Hire", cost: num(h.cost, 0, 999, 45), fx, desc: str(h.desc, 120),
+      art: { hat: CLASS_ART.hat.includes(h.art && h.art.hat) ? h.art.hat : "none", prop: CLASS_ART.prop.includes(h.art && h.art.prop) ? h.art.prop : "clipboard" } };
+  }).filter(h => h.fx.length);
+  const toRe = x => { if (x instanceof RegExp) return x; try { return new RegExp(String(x).slice(0, 160), "i"); } catch (e) { return null; } };
+  const shortAnswers = (Array.isArray(p.shortAnswers) ? p.shortAnswers : []).slice(0, 60).map(s => {
+    if (!s || typeof s !== "object" || !str(s.q) || !sk.includes(String(s.c)) || !Array.isArray(s.rub)) return null;
+    const rub = s.rub.slice(0, 10).map(rb => { rb = rb || {};
+      const re = (Array.isArray(rb.re) ? rb.re : []).slice(0, 10).map(toRe).filter(Boolean), count = (Array.isArray(rb.count) ? rb.count : []).slice(0, 10).map(toRe).filter(Boolean);
+      return { l: str(rb.l, 90) || "Key point", p: num(rb.p, 1, 10, 2), re, count: count.length ? count : null, each: clamp(Number(rb.each) || 1, 0.5, 10) }; }).filter(rb => rb.re.length || rb.count);
+    return rub.length ? { c: String(s.c), q: str(s.q, 600), model: str(s.model, 1500), rub } : null;
+  }).filter(Boolean);
+  // Employer 1-1 coaching sessions: select-all-that-apply, with a "why" for every choice
+  const tutor = (Array.isArray(p.tutor) ? p.tutor : []).slice(0, 60).map(t => {
+    if (!t || typeof t !== "object" || !str(t.q) || !sk.includes(String(t.c)) || !Array.isArray(t.opts)) return null;
+    const opts = t.opts.slice(0, 8).map(o => o && str(o.t) ? { t: str(o.t, 160), ok: o.ok === true, why: str(o.why, 300) || "" } : null).filter(Boolean);
+    return opts.length >= 3 && opts.some(o => o.ok) ? { c: String(t.c), q: str(t.q, 400), key: str(t.key, 700) || "", opts } : null;
+  }).filter(Boolean);
+  const questions = []; let bad = 0;
+  (Array.isArray(p.questions) ? p.questions : []).forEach((q, i) => {
+    const why = (() => {
+      if (!q || typeof q !== "object") return "not an object";
+      if (!str(q.q, 1200)) return "missing question text";
+      const c = String(q.c); if (!sk.includes(c)) return `subject "${q.c}" is not in meta.subjects`;
+      const base = { id: "q" + i, kind: q.kind, c, d: num(q.d, 1, 3, 2), q: str(q.q, 1200), e: str(q.e, 600) || "" };
+      if (q.core === false) base.core = false; // optional: off the exam review list, drawn less often
+      if (Array.isArray(q.tbl) && q.tbl.length && q.tbl.length <= 12 && q.tbl.every(r => Array.isArray(r) && r.length <= 8)) base.tbl = q.tbl.map(r => r.map(x => String(x).slice(0, 60)));
+      if (q.kind === "tf") { if (typeof q.tf !== "boolean") return '"tf" must be true or false'; base.tf = q.tf; }
+      else if (q.kind === "mc") {
+        if (!Array.isArray(q.a) || q.a.length < 2 || q.a.length > 6) return '"a" needs 2–6 options (correct one first)';
+        const a = q.a.map(x => str(String(x == null ? "" : x), 300)); if (a.some(x => !x)) return "an option is empty";
+        if (new Set(a.map(x => x.toLowerCase())).size !== a.length) return "two options are the same"; base.a = a;
+      } else return 'kind must be "mc" or "tf"';
+      questions.push(base); return "";
+    })();
+    if (why) { bad++; if (W.length < 15) W.push(`Question ${i + 1} skipped: ${why}.`); }
+  });
+  if (bad > 15) W.push(`…and ${bad - 15} more skipped questions.`);
+  if (questions.length < 30) E.push(`Only ${questions.length} usable questions. A pack needs at least 30.`);
+  for (const k of sk) if (!questions.some(q => q.c === k)) W.push(`Topic "${subjects[k]}" has no questions.`);
+  const pack = { schema: "studyquest-pack/1", meta: { id: str(String(m.id || ""), 60) || "pack-" + xmur(title + questions.length), title, version: num(m.version, 1, 9999, 1), subjects }, theme, classes, enemies, items, hires: hires.length ? hires : validatePack.defaults(), questions, shortAnswers, tutor };
+  return { ok: !E.length, errors: E, warnings: W, pack };
+}
+
+validatePack.defaults = () => DEFAULT_HIRES.map(h => ({ ...h }));
+/* ---------- built-in pack: Compensation Ch 7–11 ---------- */
+const en = (id, name, subject, art, quip, extra) => ({ id, name, subject, art, quip, hp: 70, dmg: 12, ...(extra || {}) });
+const BUILTIN_RAW = {
+  schema: "studyquest-pack/1",
+  meta: { id: "comp-exam2", title: "Compensation — Exam 2 (Ch 7–11)", version: 1,
+    subjects: { "7": "Market Pay (Ch 7)", "8": "Surveys & Structures (Ch 8)", "9": "Motivation (Ch 9)", "10": "Incentive Plans (Ch 10)", "11": "Appraisals (Ch 11)" } },
+  theme: { ...DEFAULT_THEME },
+  classes: [
+    { id: "ta", name: "Talent Acquisition", salary: 68000, hp: 65, atk: 13, focus: 3, subject: "7", perk: "move", art: { hat: "headset", prop: "megaphone" }, blurb: "Sources candidates on every floor. Knows what the market pays." },
+    { id: "data", name: "Data Analytics", salary: 88000, hp: 60, atk: 16, focus: 3, subject: "8", perk: "scout", art: { hat: "none", prop: "chart" }, blurb: "Runs the regression before anyone asks." },
+    { id: "td", name: "Talent Development", salary: 70000, hp: 70, atk: 12, focus: 3, subject: "9", perk: "focus", art: { hat: "none", prop: "book" }, blurb: "Motivates people for a living. Has a workshop for that." },
+    { id: "comp", name: "Compensation", salary: 85000, hp: 65, atk: 15, focus: 2, subject: "10", perk: "gold", art: { hat: "none", prop: "calculator" }, blurb: "Designs the incentive plans. Finds money in every budget." },
+    { id: "hrg", name: "HR Generalist", salary: 62000, hp: 75, atk: 12, focus: 3, subject: "11", perk: "heal", art: { hat: "bun", prop: "clipboard" }, blurb: "Has read every performance review. Twice." },
+    { id: "hrbp", name: "HR Business Partner", salary: 110000, hp: 85, atk: 15, focus: 2, subject: null, perk: "tough", art: { hat: "none", prop: "briefcase" }, blurb: "Has a seat at the table. Takes the hits for the team." },
+    { id: "ethics", name: "Compliance & Ethics", salary: 80000, hp: 70, atk: 13, focus: 3, subject: null, perk: "appeal", art: { hat: "none", prop: "scales" }, blurb: "Reads the fine print. Wins every appeal." },
+    { id: "auto", name: "Automation & Systems", salary: 95000, hp: 70, atk: 14, focus: 3, subject: null, perk: "shield", art: { hat: "hardhat", prop: "laptop" }, blurb: "Automated the firewall. And the coffee order." }
+  ],
+  enemies: [
+    en("leadling", "Leadling", "7", { body: "round", ears: "cat", eyes: "big", mouth: "smile", acc: ["arrowUp"], tail: 1 }, "Pays above market. Purrs when retention is high."),
+    en("lagmole", "Lagmole", "7", { body: "wide", ears: "round", eyes: "sleepy", mouth: "flat", pat: "belly", acc: ["arrowDown"] }, "Lags the market. Cheap now, lonely later."),
+    en("mixmunk", "Mixmunk", "7", { body: "blob", ears: "round", eyes: "big", mouth: "open", pat: "stripes", acc: ["pie"], tail: 1 }, "Stuffs base, bonus, and benefits in its cheeks."),
+    en("wagewolf", "Wagewolf", "7", { body: "tall", ears: "cat", eyes: "angry", mouth: "zig", pat: "belly", acc: ["dollar"], tail: 1 }, "Hunts only where marginal revenue beats the wage."),
+    en("benchmouse", "Benchmouse", "8", { body: "round", ears: "biground", eyes: "dot", mouth: "smile", acc: ["glasses"], tail: 1 }, "Matches job content, never just titles."),
+    en("bandicoot", "Bandicoot", "8", { body: "wide", ears: "cat", eyes: "big", mouth: "smile", pat: "bands", tail: 1 }, "Fewer, wider bands. Loves lateral moves."),
+    en("gradegator", "Gradegator", "8", { body: "wide", ears: "none", eyes: "angry", mouth: "zig", pat: "spots", acc: ["stairs"], tail: 1 }, "Climbs one pay grade at a time."),
+    en("regressnake", "Regressnake", "8", { body: "tall", ears: "none", eyes: "dot", mouth: "smile", pat: "stripes", acc: ["chart"] }, "Fits a line through every benchmark job."),
+    en("expectoad", "Expectoad", "9", { body: "wide", ears: "none", eyes: "big", mouth: "open", pat: "spots", acc: ["star"] }, "E × I × V. If one is zero, it croaks."),
+    en("herzbird", "Herzbird", "9", { body: "tri", ears: "crest", eyes: "dot", mouth: "smile", acc: ["tie"] }, "Hygiene first, motivators second."),
+    en("maslowth", "Maslowth", "9", { body: "tall", ears: "round", eyes: "sleepy", mouth: "smile", pat: "belly", acc: ["pyramid"] }, "Climbs the needs pyramid very, very slowly."),
+    en("equitern", "Equitern", "9", { body: "tri", ears: "none", eyes: "dot", mouth: "flat", acc: ["scale"] }, "Always comparing its fish to yours."),
+    en("gainsheep", "Gainsheep", "10", { body: "round", ears: "round", eyes: "dot", mouth: "smile", pat: "fluffy", acc: ["gear"] }, "Shares the savings it helps create."),
+    en("profitox", "Profitox", "10", { body: "tall", ears: "cat", eyes: "angry", mouth: "smile", pat: "belly", acc: ["dollar"], tail: 1 }, "Only pays out when the firm profits."),
+    en("piecerat", "Piecerat", "10", { body: "round", ears: "round", eyes: "big", mouth: "zig", acc: ["stopwatch"], tail: 1 }, "Paid per cheese wheel. Do not distract."),
+    en("esopossum", "ESOPossum", "10", { body: "blob", ears: "round", eyes: "big", mouth: "flat", pat: "mask", acc: ["crown"], tail: 1 }, "Owns a piece of the company. Nervous about it."),
+    en("halowl", "Halowl", "11", { body: "round", ears: "cat", eyes: "big", mouth: "smile", acc: ["halo"] }, "One great skill makes everything look great."),
+    en("hornet", "Hornet", "11", { body: "blob", ears: "horns", eyes: "angry", mouth: "zig", pat: "stripes" }, "One mistake stings every rating."),
+    en("calibrat", "Calibrat", "11", { body: "round", ears: "cat", eyes: "big", mouth: "open", acc: ["ruler"] }, "Compares ratings until everyone agrees."),
+    en("rankoon", "Rankoon", "11", { body: "blob", ears: "round", eyes: "big", mouth: "smile", pat: "mask", acc: ["one"], tail: 1 }, "Ranks everyone. Can't tell you by how much."),
+    en("maw", "Market Maw", "7", { body: "wide", ears: "horns", eyes: "angry", mouth: "zig", pat: "bands", acc: ["dollar"], tail: 1 }, "Swallows firms that lag too far behind.", { elite: true, hp: 105, dmg: 15 }),
+    en("hydra", "Halo-Horn Hydra", "11", { body: "tall", pat: "belly", heads: [{ ears: "none", acc: ["halo"], eyes: "big", mouth: "smile" }, { ears: "horns", acc: [], eyes: "angry", mouth: "zig" }] }, "One head flatters, one head stings.", { elite: true, hp: 105, dmg: 15 }),
+    en("gamer", "The CEO", "10", { body: "tall", ears: "antenna", eyes: "angry", mouth: "zig", pat: "stripes", acc: ["crown", "chart"], pic: "ceo" }, "Rewards A while hoping for B — and signs off on all of it.", { boss: true, hp: 220, dmg: 20 })
+  ],
+  items: [
+    { id: "coffee", name: "Cold Brew", cost: 25, fx: [{ op: "heal", n: 35 }], desc: "Heal yourself 35 HP." },
+    { id: "pizza", name: "Pizza Friday", cost: 55, fx: [{ op: "heal", n: 25, who: "team" }], desc: "Heal the whole team 25 HP." },
+    { id: "spot", name: "Spot Award", cost: 35, fx: [{ op: "dmgBuff", n: 100 }], desc: "Your next correct answer does double damage." },
+    { id: "shield", name: "Retention Bonus", cost: 40, fx: [{ op: "shield", n: 1 }], desc: "Block the next hit on you." },
+    { id: "raise", name: "Market Adjustment", cost: 45, fx: [{ op: "maxhp", n: 15 }], desc: "+15 max HP." },
+    { id: "stapler", name: "Golden Stapler", cost: 30, fx: [{ op: "focus", n: 2 }], desc: "+2 focus (lifelines)." },
+    { id: "pto", name: "Extra PTO Day", cost: 70, fx: [{ op: "lives", n: 1 }], desc: "+1 PTO day for the team." },
+    { id: "memo", name: "Shredded Reorg Memo", cost: 40, fx: [{ op: "chaos", n: -2 }], desc: "Layoff Meter −2." },
+    { id: "extend", name: "Deadline Extension", cost: 55, fx: [{ op: "rounds", n: 2 }], desc: "In a fight: +2 rounds before the deadline." },
+    { id: "override", name: "Executive Override", cost: 70, fx: [{ op: "cut", n: 20 }], desc: "In a fight: the enemy loses 20% of its max HP." },
+    { id: "ticket", name: "Reassign Ticket", cost: 25, fx: [{ op: "reroll", n: 1 }], desc: "In a fight: swap your question for a new one." },
+    { id: "offsite", name: "Team Offsite", cost: 60, fx: [{ op: "dmgBuff", n: 50, who: "team" }], desc: "Everyone's next correct answer does +50% damage." }
+  ],
+  hires: DEFAULT_HIRES,
+  shortAnswers: CONCEPT_SA.map(s => ({ c: String(s.c), q: s.q, model: s.model, rub: s.rub })),
+  questions: BANK.map(q => ({ kind: q.kind, c: String(q.c), d: q.d, q: q.q, a: q.a, tf: q.tf, e: q.e, tbl: q.tbl }))
+};
+
+/* ---------- built-in pack: MGMT 623 Predicted Practice Exam 2 (default) ----------
+   Q1–45 as written in the practice packet (correct answer first; the game shuffles).
+   Q46–48 short answers are split into gradable steps.                               */
+const PRACTICE_QS = [];
+const PM = (c, d, q, a, e, tbl) => PRACTICE_QS.push({ kind: "mc", c: String(c), d, q, a, e, tbl });
+const PT = (c, d, q, tf, e) => PRACTICE_QS.push({ kind: "tf", c: String(c), d, q, tf, e });
+const GRID11P = [["Rating", "CR < 0.90", "CR 0.90–1.10", "CR > 1.10"], ["Exceeds", "6%", "5%", "4%"], ["Meets", "4%", "3%", "2%"], ["Below", "0%", "0%", "0%"]];
+// Part I — multiple choice
+PM(7, 2, "Two employers each offer $98,000 in total compensation. Employer A emphasizes guaranteed base pay; Employer B offers lower base pay but larger bonuses. What is the best interpretation?", ["They have the same total compensation level but different mixes, which can appeal to different workers.", "They necessarily have identical attraction and retention effects.", "Employer B automatically leads the market on base pay.", "Employer A must have lower labor costs."], "Equal totals can create different risk, security, and incentive preferences and sorting effects. (Ch. 7 slides 1-2, 9)");
+PM(7, 2, "A retail chain needs cybersecurity engineers. Its retail-sector competitors do not employ many cybersecurity specialists, but banks and technology firms recruit them aggressively. Whose pay should anchor its survey?", ["Employers competing for comparable cybersecurity skills, including banks and technology firms", "Retail product-market rivals only", "Any local employer regardless of occupation", "Only companies with the same headcount"], "The relevant labor market is defined by occupation/skills and geography; labor rivals need not be product rivals. (Ch. 7 slide 7; Ch. 8 slide 2)");
+PM(7, 3, "Hiring one more technician is expected to generate 16 additional completed services each week. Each completed service contributes $55 in additional revenue, and the technician's full weekly employment cost is $760. Which decision follows the marginal-revenue principle?", ["Hire, because the incremental revenue exceeds the employment cost by $120.", "Do not hire, because wages should be below marginal product measured in units.", "Hire only if the applicant accepts less than the market wage.", "Do not hire, because additional revenue is $55."], "16 × $55 = $880 incremental weekly revenue; $880 − $760 = $120 positive contribution. (Ch. 7 slide 4)");
+PM(7, 2, "A candidate has two offers: $88,000 for on-site work with a long commute and $83,000 for remote work with flexibility. The candidate accepts the $83,000 position. What does this most directly illustrate?", ["Nonmonetary job attributes can affect the wage an applicant is willing to accept.", "Reservation wages are identical for all jobs.", "The higher-paying employer is necessarily overpaying the market.", "Compensation strategy has no role in sorting."], "An applicant's minimum acceptable wage depends partly on the job's attributes and alternatives. (Ch. 7 slides 3, 5)");
+PM(7, 1, "An offshore contractor pays employees a wage premium for physically hazardous assignments compared with otherwise similar onshore roles. Which concept best explains the premium?", ["Compensating wage differential", "Spillover error", "Central tendency", "Compa-ratio"], "Less desirable or riskier job characteristics may require additional compensation. (Ch. 7 slide 5)");
+PM(7, 2, "After increasing starting salaries for a difficult-to-fill role, an employer attracts better-qualified applicants and reduces turnover. The policy may be generating which benefit?", ["Efficiency-wage benefits", "Guaranteed profits independent of labor costs", "A smaller relevant labor market", "A reduction in every employee's reservation wage"], "Above-market wages can improve applicant quality, retention, and effort; higher costs still require a return. (Ch. 7 slides 5-6)");
+PM(7, 2, "A low-margin manufacturer faces many competitors selling nearly identical products. Which assertion about an above-market pay policy is most defensible?", ["Additional labor costs must be justified through productivity, quality, retention, or other business value.", "Product competition is irrelevant to pay decisions.", "Paying more is impossible under any circumstances.", "All employees must receive the same fixed wage."], "Product-market price pressure limits cost recovery, so higher wages need an economic or strategic return. (Ch. 7 slide 6)");
+PM(7, 2, "A firm matches market base pay for routine clerical roles but leads the market for scarce data scientists, while also offering performance bonuses. Which statement is most accurate?", ["The firm is using differentiated pay policies by occupation and pay component.", "An employer must adopt one uniform pay-level policy for its entire workforce.", "The firm is necessarily lagging the total compensation market.", "Different compensation mixes eliminate labor-market competition."], "Lead/match/lag choices can differ by occupation, business unit, and pay element. (Ch. 7 slides 8-9)");
+PM(8, 2, "An HR analyst must benchmark an internal 'Customer Experience Architect' role combining analytics, service design, and change management. External survey titles are inconsistent. What is the strongest first step?", ["Compare actual job content and skills across plausible matches and document imperfect comparability.", "Select the survey job whose title sounds closest.", "Discard all external data regardless of overlap.", "Use the industry average for every job."], "Hybrid roles often have fuzzy markets; job-content matches matter more than titles. (Ch. 8 slides 2-3)");
+PM(8, 2, "A compensation survey includes excellent pay data for executives but almost none for the technical and administrative jobs that make up most of the employer's workforce. What is the principal limitation?", ["Poor benchmark coverage of the organization's job structure", "Excessive geographic representativeness", "Too many job-content matches", "A too-large sample of the correct jobs"], "Benchmark jobs should represent enough of the internal job hierarchy to anchor the structure. (Ch. 8 slide 3)");
+PM(8, 2, "A competing employer reports $84,000 base salary, $11,000 cash performance bonus, and $18,000 in benefits. What is total cash compensation, assuming no other cash payments?", ["$95,000", "$84,000", "$102,000", "$113,000"], "Total cash = base + cash incentives = $84,000 + $11,000 = $95,000. Benefits belong to total compensation. (Ch. 8 slide 3)");
+PM(8, 3, "A market-pay regression is estimated as predicted annual pay = $28,000 + $145 × job-evaluation points. What is the predicted market pay for a job with 400 points?", ["$86,000", "$58,000", "$72,000", "$98,000"], "$28,000 + ($145 × 400) = $86,000. (Study Guide Ch. 8: regression and JE charts)");
+PM(8, 3, "An employer wants its pay-policy line to LEAD the market by 6%. If a benchmark job's estimated market pay is $75,000, which policy target follows?", ["$79,500", "$75,600", "$70,500", "$81,000"], "$75,000 × 1.06 = $79,500. Leading means a target above the market figure. (Study Guide Chs. 7-8)");
+PM(8, 3, "A pay range has a minimum of $52,000 and maximum of $78,000. Using the class formula, what is its range spread?", ["50.0%", "33.3%", "40.0%", "60.0%"], "Range spread = (max ÷ min) − 1 = 78,000 ÷ 52,000 − 1 = 50%. (Ch. 8, 10/12 lecture slide 1)");
+PM(8, 2, "A firm replaces 18 narrow salary grades with four broad pay bands. Which trade-off is most likely?", ["More lateral-pay flexibility but greater need for consistent managerial judgment", "Less discretion and more promotion steps", "Automatic elimination of favoritism", "One pay rate for every job in a band"], "Broadbanding supports lateral movement but relies more on manager discretion and governance. (Ch. 8, 10/12 slides 2-3)");
+PM(9, 2, "A sales director increases bonuses but staff continue to report low motivation because their work offers little growth or meaningful achievement. Which reading best fits the course's Herzberg discussion?", ["Adequate pay can reduce dissatisfaction, but achievement and growth also matter for motivation.", "Increasing pay always creates sustained motivation.", "Pay level is irrelevant to dissatisfaction.", "All employees value rewards equally."], "Herzberg separates pay-related dissatisfaction from motivators like achievement, growth, and the work itself. (Ch. 9 slide 5)");
+PM(9, 2, "Employees are confident they can meet their targets and trust that successful performance earns a reward, but they place no value on the offered reward. Under expectancy theory, which element is weakest?", ["Valence", "Expectancy", "Instrumentality", "Agency alignment"], "Valence = how attractive the reward is; motivation depends on E, I, and V. (Ch. 9 slide 6)");
+PM(9, 2, "Two employees contribute similar effort and skill, but one learns a comparable coworker receives much higher rewards. The first employee reduces discretionary effort. Which theory most directly explains this?", ["Equity theory", "Goal-setting theory", "Agency theory", "Efficiency-wage theory"], "A perceived input/outcome imbalance relative to a referent changes effort. (Ch. 9 slide 7)");
+PM(9, 2, "A warehouse manager sets an ambitious but achievable error-reduction target, gives weekly feedback, and recognizes improved accuracy soon after it occurs. Which theories are most directly combined?", ["Goal-setting and reinforcement", "Human capital and reservation wage", "First-impression and spillover", "Profit sharing and ESOP theory"], "Specific challenging goals + feedback = goal setting; timely recognition = reinforcement. (Ch. 9 slide 7)");
+PM(9, 2, "A business introduces bonuses based on multi-year profitability so managers consider owner outcomes rather than short-term personal gains. Which theory best frames this alignment?", ["Agency theory", "Central tendency", "Compensating differentials", "BARS"], "Agency theory aligns manager interests with owners through incentives. (Ch. 9 slide 7)");
+PM(9, 2, "After a firm adopts commissions, risk-averse applicants increasingly decline offers, while employees comfortable with variable earnings are more likely to remain. This is primarily which effect?", ["Sorting effect", "A pure reinforcement effect", "Horn error", "Pay-range compression"], "Sorting changes workforce composition through who joins, stays, and leaves. (Ch. 9 slide 8)");
+PM(9, 3, "A service organization measures call volume precisely and rewards high throughput; customer complaints rise. Which diagnosis best follows Kerr and the lecture?", ["The program rewards a narrow measurable activity while hoping for a different service outcome.", "The employees have no reservation wages.", "Appraisals must rely on peer rankings only.", "Pay mix has no behavioral consequences."], "It rewards counted calls while hoping for good service: rewarding A, hoping for B. (Kerr; Ch. 9 slide 10)");
+PM(9, 2, "A sales-incentive program produces large payouts but employees cannot verify how credited sales are assigned. Which change most directly addresses procedural concerns?", ["Publish clear crediting standards, provide auditability, and explain decisions.", "Raise the bonus maximum while retaining opaque rules.", "Switch to random payout decisions.", "Make all decisions privately without appeals."], "Procedural fairness and clear communication are critical incentive design conditions. (Ch. 9 slide 10)");
+PM(10, 2, "A software developer earns $95,000 base pay and is awarded a one-time $7,500 merit bonus. Assuming no other changes, what is the base salary for the following year?", ["$95,000", "$102,500", "$87,500", "$100,000"], "A merit bonus is a lump sum and does not build into base pay. (Ch. 10 slides 3-4)");
+PM(10, 3, "A production employee is paid $9 per accepted finished item. The worker produces 180 units, but 12 fail inspection and are not payable. What is the incentive earnings amount?", ["$1,512", "$1,620", "$1,404", "$1,692"], "(180 − 12) × $9 = 168 × $9 = $1,512. Only accepted units pay. (Ch. 10 slide 5)");
+PM(10, 2, "An engineering team has highly interdependent assignments, but equal team bonuses are causing some members to contribute less while others carry the workload. Which design response best fits the lecture?", ["Use a combined plan preserving shared outcomes alongside individual accountability.", "Eliminate coordination requirements by rewarding speed only.", "Pay all team members only for company-wide profits.", "Treat unequal effort as unrelated to incentive design."], "Team plans support cooperation but invite free riders; blended measures balance both. (Ch. 10 slides 6, 10)");
+PM(10, 1, "A distribution center shares a predetermined percentage of verified reductions in controllable shipping errors and material waste with employees. Which plan is described?", ["Gainsharing", "Profit sharing", "Seniority pay", "Employee stock ownership"], "Gainsharing links rewards to measurable operational improvements employees can influence. (Ch. 10 slide 7)");
+PM(10, 2, "Why may a company-wide profit-sharing plan motivate a front-line employee less directly than an operational gainsharing plan?", ["Company profits depend on many factors outside any one worker's direct control.", "Profit sharing increases all salaries permanently.", "Profit sharing is necessarily illegal in labor-intensive work.", "Every employee fully controls reported company profit."], "Profit sharing has weak individual line-of-sight compared with controllable unit targets. (Ch. 10 slides 7-8)");
+PM(10, 2, "A company issues broad-based stock grants that vest after several years. What combination of benefits and risks is most realistic?", ["Potential retention and shared interest in company value, but uncertain stock value and limited individual line-of-sight", "Immediate guaranteed daily productivity; no employee risk", "No influence on retention because the grants vest later", "A guaranteed fixed cash value at every future date"], "Vesting can support retention, but stock value and individual influence are uncertain. (Ch. 10 slide 9)");
+PM(10, 2, "A firm has 75% of incentive earnings tied to individual results and 25% to team outcomes. What is the best evaluation?", ["The mix can balance individual line-of-sight and cooperation, but weights should fit the job and strategy.", "A 75/25 split is required for all organizations.", "Team outcomes must always be eliminated.", "Individual and group incentives cannot be combined."], "The lecture uses 75/25 as an illustration, not a universal optimum. (Ch. 10 slide 10)");
+PM(11, 1, "A department head places employees in an ordered list from best to worst, without indicating the magnitude of differences. Which method is being used?", ["Relative ranking", "BARS", "Management by Objectives", "Standard rating scale"], "Ranking compares employees to each other but not how far apart they are. (Ch. 11 slide 3)");
+PM(11, 2, "A manager gives an engineer a low teamwork rating this year because the engineer performed poorly two years ago, despite clear recent improvement. Which appraisal error fits?", ["Spillover", "Recency", "Central tendency", "Halo"], "Spillover carries prior-period judgments into the current rating. (Ch. 11 slide 11)");
+PM(11, 3, "Managers agree on what counts as 'customer responsiveness' but disagree on what documented behavior merits an 'Exceeds' rating. Which training intervention most directly targets the problem?", ["Performance-standard training using common behavioral examples and practice ratings", "Only rater-error awareness training", "Eliminate all feedback conversations", "Allow each department to invent its own standards"], "Performance-standard training sets shared rating thresholds; dimension training would clarify the dimension itself. (Ch. 11 slide 12)");
+PM(11, 2, "A company wants an appraisal method that provides coaching feedback, supports defensible merit decisions, and fits a limited HR budget. Which response best uses the lecture's evaluation criteria?", ["Evaluate development, administration, research utility, cost, and validity in relation to the job and decision purpose.", "Choose a format only because it is inexpensive.", "Choose employee rankings solely to produce a forced pay distribution.", "Eliminate performance evidence from ratings."], "Five appraisal-format criteria: development, administration, research, cost, validity. (Ch. 11 slide 7)");
+PM(11, 1, "An employee demands that the supervisor handle all responsibility for performance management. What does the course recommend instead?", ["Managers and employees share responsibility for goals, feedback, and ongoing improvement.", "Only the employee should define appraisal standards.", "Neither party should revisit goals during the year.", "Formal year-end reviews alone guarantee accurate appraisal."], "Managers set standards and coach; employees clarify goals, seek feedback, and improve. (Ch. 11 slide 15)");
+// Part II — true / false
+PT(7, 2, "A company's product-market competitors and labor-market competitors must be exactly the same organizations for its pay survey to be valid.", false, "Labor competitors pursue the same skills and may be outside the product market. (Ch. 7 slide 7)");
+PT(7, 1, "A job involving unpleasant conditions may require higher cash pay even if the job's required skills and productivity resemble a safer alternative.", true, "This is a compensating wage differential. (Ch. 7 slide 5)");
+PT(8, 2, "Holding the range minimum constant, increasing the pay-range maximum increases the percentage range spread calculated as (maximum/minimum) − 1.", true, "Same denominator, bigger numerator → bigger spread. (Ch. 8, 10/12 slide 1)");
+PT(8, 2, "A regression-based market pay line and a company's chosen pay-policy line necessarily have the same predicted wages for every job.", false, "The policy line can lead or lag the market line. (Study Guide Ch. 8; Ch. 7 slide 8)");
+PT(9, 2, "A worker who is confident in their ability and values the bonus might still be poorly motivated if they do not believe successful performance will produce that bonus.", true, "Low instrumentality breaks the performance → reward link. (Ch. 9 slide 6)");
+PT(9, 2, "Incentive effects refer to which types of employees enter or leave an organization, rather than how current employees change their effort.", false, "That describes sorting; incentive effects concern current employees' effort. (Ch. 9 slides 8-9)");
+PT(10, 1, "A profit-sharing payout can depend on company-wide financial results over which many individual employees have limited direct control.", true, "Profit sharing has weaker individual line-of-sight. (Ch. 10 slide 8)");
+PT(10, 2, "A gainsharing program necessarily produces the same payout as a profit-sharing program because both are triggered by net accounting profit.", false, "Gainsharing rewards operating improvements; profit sharing depends on profitability. (Ch. 10 slides 7-8)");
+PT(11, 1, "Performance appraisal ratings can suffer from observation, memory, and evaluation errors even when the organization has an established rating form.", true, "Attending, storing/recalling, and interpreting all create room for bias. (Ch. 11 slides 9-11)");
+PT(11, 2, "360-degree feedback automatically guarantees high interrater reliability simply because more perspectives are represented.", false, "More raters add perspectives, but shared standards and reliability still need work. (Ch. 11 slide 8)");
+// Part III Q46 — pay level and pay mix (split into steps)
+const Q46 = [["Package", "Base", "Target bonus", "Benefits"], ["Logistics co.", "$72,000", "$6,000", "$16,000"], ["Tech firm", "$64,000", "$16,000", "$14,000"]];
+PM(7, 3, "Short answer 46(a): Using the table, what is target total compensation for each package?", ["Both are $94,000", "Logistics $94,000; tech $80,000", "Logistics $78,000; tech $80,000", "Logistics $88,000; tech $94,000"], "Logistics 72 + 6 + 16 = $94k; tech 64 + 16 + 14 = $94k. Equal totals, different mixes.", Q46);
+PM(9, 3, "Short answer 46(b): Using the table, how might the two mixes sort candidates? Candidate 1 strongly prefers stable income; Candidate 2 is comfortable with variable earnings.", ["Candidate 1 leans toward the logistics firm's higher base; Candidate 2 toward the tech firm's larger bonus opportunity.", "Both prefer the tech firm because its bonus is larger.", "Both prefer the logistics firm because its total is higher.", "Neither cares, because target totals are equal."], "Same target total, but the guaranteed base attracts risk-averse people and the bonus attracts risk-tolerant people (sorting).", Q46);
+PT(7, 3, "Short answer 46: Because both packages have the same target total compensation, they will attract the same candidates.", false, "Equal totals can still sort different people because the mixes differ in risk; bonuses are targets, not guarantees.");
+PM(7, 3, "Short answer 46(c): Which is a sound NON-pay-level factor the logistics company should evaluate before changing its package?", ["Whether employees can actually control the performance metrics behind the bonus", "Matching the tech firm's base pay exactly", "Dropping benefits because totals are already equal", "Assuming the tech bonus is guaranteed and copying it"], "Consider risk preferences, controllable and credible metrics, benefits and flexibility, product-market margins, and recruiting evidence.");
+// Part III Q47 — market pay, pay structure, merit (data interpretation)
+PM(8, 3, "Short answer 47(a): Market pay = $31,000 + ($165 × job-evaluation points). What is predicted market pay for a 300-point analyst role?", ["$80,500", "$84,525", "$49,500", "$76,000"], "$31,000 + $165 × 300 = $31,000 + $49,500 = $80,500.");
+PM(8, 3, "Short answer 47(b): Predicted market pay is $80,500 and policy LEADS the market by 5%. The range midpoint equals the policy target. What is the midpoint?", ["$84,525", "$80,500", "$76,475", "$85,000"], "$80,500 × 1.05 = $84,525.");
+PM(11, 3, "Short answer 47(c): The employee earns $76,000 and the range midpoint is $84,525. What is the compa-ratio, and which merit-grid column applies?", ["0.899 — the < 0.90 column", "0.899 — the 0.90–1.10 column", "0.944 — the 0.90–1.10 column", "1.112 — the > 1.10 column"], "$76,000 ÷ $84,525 = 0.899, which is BELOW 0.90.", GRID11P);
+PM(11, 3, "Short answer 47(d): The employee earns $76,000, has a compa-ratio of 0.899, and is rated MEETS. What are the merit increase and new salary?", ["$3,040 raise; new salary $79,040", "$2,280 raise; new salary $78,280", "$3,800 raise; new salary $79,800", "$1,520 raise; new salary $77,520"], "Meets + CR < 0.90 = 4%. $76,000 × 0.04 = $3,040 → $79,040.", GRID11P);
+PM(8, 3, "Short answer 47(e): Why doesn't the employee's compa-ratio alone show whether they are above or below the external market?", ["Compa-ratio compares salary with an INTERNAL midpoint; because the firm leads the market, the midpoint is above market pay.", "Compa-ratio already measures salary against the market pay line.", "Compa-ratio only applies to employees rated Exceeds.", "Compa-ratio ignores the employee's salary."], "Compa-ratio is salary ÷ internal midpoint. The midpoint leads the market, and $76,000 is below the $80,500 market pay.");
+// Part III Q48 — appraisal redesign and incentive alignment
+PM(11, 2, "Short answer 48(a): A call-center supervisor gets top marks in EVERY category because she is highly charismatic, despite high repeat-contact rates. Which error is this?", ["Halo", "Spillover", "Central tendency", "Recency"], "Halo: one strong impression (charisma) inflates ratings on unrelated dimensions.");
+PM(11, 2, "Short answer 48(a): Another supervisor has excellent customer ratings and coaching records, but a missed deadline LAST year still depresses this year's rating. Which error is this?", ["Spillover", "Halo", "Leniency", "First impression"], "Spillover: last period's judgment carries into the current rating despite current evidence.");
+PM(11, 3, "Short answer 48(b): The center rates supervisors on total calls resolved plus one vague 'leadership' item. Which format best fits the work?", ["BARS with observable leadership/coaching anchors (or MBO with quality and customer targets)", "A single overall rating with no anchors", "Ranking supervisors purely by call volume", "Dropping appraisal and paying everyone the same"], "Behavioral anchors make leadership observable; MBO or blended outcome metrics also work.");
+PM(11, 3, "Short answer 48(c): Staff say merit raises feel arbitrary. Which pair of process changes most improves consistency and fairness?", ["Calibration sessions plus performance-standard training with documented evidence across the whole period", "Letting each manager set private standards", "Rating only at year-end from memory", "Using one rater and removing appeals"], "Calibration, standard/dimension training, documentation, and multiple appropriate raters improve reliability.");
+PM(9, 3, "Short answer 48(d): Which is a Kerr-style misalignment at the call center, with a fix?", ["Rewarding call volume while hoping for durable resolution; add repeat-contact and customer-outcome measures.", "Rewarding customer ratings while hoping for speed; drop customer ratings.", "Rewarding coaching while hoping for coaching; no change needed.", "Rewarding attendance while hoping for attendance; add more attendance metrics."], "Rewarding A (calls closed) while hoping for B (problems solved). Measure what you actually want. (Kerr)");
+const PRACTICE_RAW = { ...BUILTIN_RAW,
+  meta: { id: "mgmt623-practice", title: "MGMT 623 — Predicted Practice Exam 2", version: 1, subjects: BUILTIN_RAW.meta.subjects },
+  questions: PRACTICE_QS };
+/*@@IHRM@@*/
+/* built-in packs: shared by id, so clients never need the file */
+const BUILTIN_PACKS = { practice: { raw: PRACTICE_RAW, label: "Practice Exam 2 (59 questions)" }, builtin: { raw: BUILTIN_RAW, label: "Full Ch 7–11 bank (237 + calculators)" },
+  ihrm: { raw: IHRM_RAW, label: "MGMT 660 International Business Ch 4–7 (" + IHRM_QS.length + " questions)", gens: IHRM_GENS } };
+const DEFAULT_PACK = "ihrm";
+
+/* ---------- current pack ---------- */
+let PACK = null, PACK_RAW = null, PACK_ID = "builtin";
+const TH = () => PACK.theme;
+function loadPack(raw, id) {
+  const v = validatePack(raw); if (!v.ok) return v;
+  PACK = v.pack; PACK.gens = id === "builtin" ? GENS : null; PACK.calcGens = BUILTIN_PACKS[id] ? BUILTIN_PACKS[id].gens || GENS : null; PACK_RAW = raw; PACK_ID = id; return v;
+}
+function loadBuiltin() { return loadPack(BUILTIN_RAW, "builtin"); }
+function loadById(id) { return loadPack(BUILTIN_PACKS[id].raw, id); }
+function loadDefault() { return loadById(DEFAULT_PACK); }
+function prepQ(q, r) {
+  if (q.kind === "tf") return { id: q.id, kind: "tf", c: q.c, d: q.d, q: q.q, e: q.e, tbl: q.tbl, opts: ["True", "False"], ans: q.tf ? 0 : 1 };
+  const order = shuffle(q.a.map((_, i) => i), r);
+  return { id: q.id, kind: "mc", c: q.c, d: q.d, q: q.q, e: q.e, tbl: q.tbl, opts: order.map(i => q.a[i]), ans: order.indexOf(0), calc: !!q.calc };
+}
+/* Host-only: pick a question for a subject (null = any) at or below a difficulty. Generated calculators come only from the built-in pack. */
+function drawQ(S, subj, maxD, r) {
+  if (PACK.gens && r() < 0.3) {
+    const gs = PACK.gens.filter(g => (!subj || String(g.c) === subj) && g.d <= maxD);
+    if (gs.length) { const g = pick(r, gs), o = g.make(r); return prepQ({ ...o, kind: "mc", c: String(g.c), d: g.d, id: "g" + S.rn, calc: true }, r); }
+  }
+  const all = PACK.questions, fresh = q => !S.used.includes(q.id);
+  let pool = all.filter(q => (!subj || q.c === subj) && q.d <= maxD && fresh(q));
+  if (!pool.length) pool = all.filter(q => (!subj || q.c === subj) && fresh(q));
+  if (!pool.length) pool = all.filter(fresh);
+  if (!pool.length) { S.used = []; pool = all.slice(); }
+  const core = pool.filter(q => q.core !== false); if (core.length && core.length < pool.length && r() < CORE_SHARE) pool = core;
+  const q = pick(r, pool); S.used.push(q.id); return prepQ(q, r);
+}
+const CORE_SHARE = 0.8; // packs can mark questions core:false (off the review list); 80% of draws skip them
+
+/* ============================================================
+   GAME RULES — one state object, one reducer.
+   The host (or the single device in pass-and-play) is the only place reduce() runs.
+   ============================================================ */
+/* Performance bars = the share of answers the team must get right before a fight's deadline.
+   Rivals on the open floor are short, low-stress training fights: 40 / 45 / 50% by region, 3–5 questions each, no PTO lost on a miss,
+   and they can drop items or gear. Dungeons: Subsidiary 60–65%, Plant 72–80%, HQ 85–90%. */
+const REGION_BARS = [0.4, 0.45, 0.5];
+const TRAIN_QS = n => n === 1 ? 5 : n <= 3 ? 4 : 3; // questions per player in a rival fight; HP still sums every player's attack, so bigger teams face bigger rivals
+const TRAIN_DMG = 0.6, DROP_ITEM = 0.35, DROP_GEAR = 0.25, CLEAN_WIN = 0.8;
+const DUNGEON_PLAN = [
+  { bars: [0.6, 0.65], kinds: ["normal", "elite"], tier: 1, reward: 40 },
+  { bars: [0.72, 0.8], kinds: ["normal", "elite"], tier: 2, reward: 60 },
+  { bars: [0.85, 0.88, 0.9], kinds: ["elite", "elite", "boss"], tier: 3, reward: 0 }
+];
+const FIGHT_QS = { normal: 8, elite: 9, boss: 12 };
+const TALK_MS = 8000, ANSWER_MS = 25000, REVEAL_AUTO_MS = 12000, MAX_PLAYERS = 6, MAX_HIRES = 2, MAP_W = 13, MAP_H = 9;
+const DIRS = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
+const hexId = (q, r) => q + "," + r;
+const qr = id => id.split(",").map(Number);
+const offToId = (c, row) => hexId(c - Math.floor(row / 2), row);
+function adj(a, b) { const [q1, r1] = qr(a), [q2, r2] = qr(b); return DIRS.some(([x, y]) => x === q2 - q1 && y === r2 - r1); }
+function hexDist(a, b) { const [q1, r1] = qr(a), [q2, r2] = qr(b); return (Math.abs(q1 - q2) + Math.abs(r1 - r2) + Math.abs(q1 + r1 - q2 - r2)) / 2; }
+function nbrs(id, tiles) { const [q, r] = qr(id); return DIRS.map(([x, y]) => hexId(q + x, r + y)).filter(k => tiles[k]); }
+function bfs(start, tiles, blocked) { const d = { [start]: 0 }, Q = [start]; while (Q.length) { const c = Q.shift(); for (const n of nbrs(c, tiles)) if (d[n] === undefined && !(blocked && blocked(n))) { d[n] = d[c] + 1; Q.push(n); } } return d; }
+function genMap(seed) {
+  const r = rngFor(seed, "map"), tiles = {};
+  for (let row = 0; row < MAP_H; row++) for (let c = 0; c < MAP_W; c++) { const id = offToId(c, row), [q, rw] = qr(id); tiles[id] = { id, q, r: rw, col: c, row, type: "hall", done: false, region: c < 5 ? 0 : c < 9 ? 1 : 2 }; }
+  const start = offToId(0, 4), hq = offToId(12, 4);
+  const sub = offToId(3 + Math.floor(r() * 2), 1 + Math.floor(r() * 7)), plant = offToId(7 + Math.floor(r() * 2), 1 + Math.floor(r() * 7));
+  const keep = [start, hq, sub, plant];
+  let removed = 0;
+  for (const id of shuffle(Object.keys(tiles), r)) {
+    if (removed >= 18) break;
+    if (keep.some(k => k === id || adj(k, id))) continue;
+    const t = tiles[id]; delete tiles[id];
+    if (Object.keys(bfs(start, tiles)).length === Object.keys(tiles).length) removed++; else tiles[id] = t;
+  }
+  const dist = bfs(start, tiles); for (const id in tiles) tiles[id].dist = dist[id];
+  tiles[start].type = "start"; tiles[start].done = true;
+  const keys = shuffle(Object.keys(PACK.meta.subjects), r), normals = PACK.enemies.filter(e => !e.boss);
+  let k = 0;
+  const pickEnemy = kind => {
+    const subj = keys[k++ % keys.length], want = kind === "elite";
+    let pool = normals.filter(e => e.subject === subj && !!e.elite === want);
+    if (!pool.length) pool = normals.filter(e => !!e.elite === want);
+    if (!pool.length) pool = normals.filter(e => e.subject === subj);
+    if (!pool.length) pool = normals;
+    return pick(r, pool).id;
+  };
+  [sub, plant, hq].forEach((id, d) => {
+    const P = DUNGEON_PLAN[d], t = tiles[id];
+    Object.assign(t, { type: "dungeon", d, progress: 0, tier: P.tier,
+      rooms: P.kinds.map((kind, i) => ({ enemy: kind === "boss" ? pick(r, PACK.enemies.filter(e => e.boss)).id : pickEnemy(kind), bar: P.bars[i] })) });
+  });
+  const free = shuffle(Object.keys(tiles).filter(id => tiles[id].type === "hall" && tiles[id].dist >= 2 && !keep.some(x => adj(x, id))), r);
+  const place = (type, count, extra) => {
+    let n = 0;
+    for (const id of free) {
+      if (n >= count) break; const t = tiles[id]; if (t.type !== "hall") continue;
+      if (Object.values(tiles).some(o => o.type === type && hexDist(o.id, id) < 3)) continue;
+      t.type = type; if (extra) Object.assign(t, extra(t)); n++;
+    }
+  };
+  place("enemy", 7, t => ({ enemy: pickEnemy("normal"), bar: REGION_BARS[t.region], tier: t.region }));
+  place("shop", 3); place("rest", 3); place("recruit", 2); place("work", 3); place("essay", 3); place("tutor", 3); place("cache", 3); place("review", 4); place("chest", 3);
+  for (const id in tiles) if (tiles[id].tier === undefined) tiles[id].tier = tiles[id].region;
+  return { tiles, start, dungeons: [sub, plant, hq] };
+}
+function reveal(S, at) { const R = S.order.some(p => clsOf(S.players[p]).perk === "scout") ? 3 : 2; for (const id in S.map.tiles) if (hexDist(id, at) <= R) S.seen[id] = 1; }
+
+function newGame(seed, code) {
+  return { v: 0, seed, code, local: false, phase: "lobby", players: {}, order: [], tokens: {}, pidN: 0, turn: 0, map: null, pos: null, prevPos: null, roll: null, moves: 0,
+    gold: 0, lives: 0, accrue: 0, accrued: 0, saUsed: [], tutUsed: [], chaos: 0, dcleared: 0, hires: [], seen: {}, turns: 0, combat: null, event: null, shop: null, used: [], grid: [], rn: 0, log: [], note: "", result: null, t0: 0, now: 0 };
+}
+const active = S => S.order[S.turn];
+const clsOf = pl => PACK.classes.find(c => c.id === pl.cls) || PACK.classes[0];
+const enemyById = id => PACK.enemies.find(e => e.id === id) || PACK.enemies[0];
+const hireById = id => PACK.hires.find(h => h.id === id);
+const hireSum = (S, op) => S.hires.reduce((a, id) => { const h = hireById(id); return a + (h ? h.fx.filter(f => f.op === op).reduce((b, f) => b + f.n, 0) : 0); }, 0);
+const dname = d => TH().dungeons[d];
+const connected = S => S.order.filter(p => S.players[p].conn);
+function logp(S, t) { S.log.push(t); if (S.log.length > 30) S.log.shift(); }
+function rr(S) { return rngFor(S.seed, "a" + (S.rn++)); }
+const nm = (S, p) => (S.players[p] || {}).name || "Someone";
+const lifeWord = () => TH().livesName.replace(/s$/, "");
+
+function reduce(S, a) {
+  S.now = a.now || S.now || 0;
+  const pl = a.pid ? S.players[a.pid] : null, r = rr(S);
+  if (a.type !== "MOVE") S.note = "";
+  switch (a.type) {
+    case "JOIN":
+      if (S.phase !== "lobby" || S.order.length >= MAX_PLAYERS || S.players[a.pid]) break;
+      S.players[a.pid] = { name: str(a.name, 16) || "Player " + (S.order.length + 1), cls: null, conn: true }; S.order.push(a.pid); break;
+    case "LEAVE":
+      if (!pl) break;
+      if (S.phase === "lobby") { delete S.players[a.pid]; S.order = S.order.filter(x => x !== a.pid); for (const t in S.tokens) if (S.tokens[t] === a.pid) delete S.tokens[t]; }
+      else { pl.conn = false; afterConn(S); }
+      break;
+    case "CONN": if (pl) { pl.conn = !!a.on; afterConn(S); } break;
+    case "PICK": if (S.phase === "lobby" && pl && PACK.classes.some(c => c.id === a.cls)) pl.cls = a.cls; break;
+    case "START": if (S.phase === "lobby" && S.order.length && S.order.every(p => S.players[p].cls)) startGame(S); break;
+    case "ROLL": if (S.phase === "map" && a.pid === active(S) && !S.roll) doRoll(S, pl, r); break;
+    case "MOVE": if (S.phase === "map" && a.pid === active(S) && S.roll && S.moves > 0) doMove(S, String(a.to || ""), r); break;
+    case "END_MOVE": if (S.phase === "map" && a.pid === active(S) && S.roll) endTurn(S, r); break;
+    case "BUY": if (S.phase === "shop" && pl) (S.shop.kind === "hires" ? hire(S, pl, a.item) : buy(S, pl, a.item)); break;
+    case "SHOP_DONE": if (S.phase === "shop" && a.pid === active(S)) { S.phase = "map"; S.shop = null; endTurn(S, r); } break;
+    case "USE": useItem(S, pl, a.idx); break;
+    case "ANSWER": if (S.phase === "combat") cAnswer(S, a); else if (S.phase === "event") eAnswer(S, a); break;
+    case "LIFELINE": lifeline(S, pl, a.pid, a.kind, r); break;
+    case "TALK_END": if (S.phase === "combat" && S.combat.step === "talk") beginRound(S, r); break;
+    case "TIMEOUT": if (S.phase === "combat" && S.combat.step === "answer") cTimeout(S); break;
+    case "NEXT": if (S.phase === "combat" && S.combat.step === "reveal" && (a.round == null || a.round === S.combat.round)) cNext(S, r); break;
+    case "EVENT_DONE": if (S.phase === "event" && S.event.done) { S.phase = "map"; S.event = null; if (S.lost) endGame(S, false); else endTurn(S, r); } break;
+    case "PICK_GEAR": if (S.phase === "event" && pl && S.event.done && S.event.offer && a.pid === S.event.pid && !S.event.took) takeGear(S, pl, S.event.offer[a.i]); break;
+    case "RESET": if (S.phase === "end") resetToLobby(S); break;
+    default: return S;
+  }
+  S.v++; return S;
+}
+function startGame(S) {
+  const n = S.order.length; let pay = 0;
+  for (const p of S.order) {
+    const pl = S.players[p], c = clsOf(pl), f = c.focus + (c.perk === "focus" ? 2 : 0); pay += c.salary;
+    Object.assign(pl, { id: p, hp: c.hp, max: c.hp, atk: c.atk, focus: f, maxFocus: f, items: [], gear: { weapon: null, armor: null }, sub: {}, shield: 0, buff: 0, ok: 0, tot: 0 });
+  }
+  Object.assign(S, { phase: "map", gold: SIGN_ON * n + 10, lives: 4 + Math.floor(n / 3), accrue: 0, accrued: 0, saUsed: [], tutUsed: [], chaos: 0, dcleared: 0, hires: [], seen: {}, turns: 0, turn: 0, map: genMap(S.seed), roll: null, moves: 0,
+    combat: null, event: null, shop: null, used: [], grid: [], log: [], result: null, lost: false, t0: S.now });
+  S.pos = S.prevPos = S.map.start; reveal(S, S.pos); for (const id of S.map.dungeons) S.seen[id] = 1;
+  void pay; logp(S, `Day one at ${TH().tiles.start}. Sign-on bonus: ${TH().currency}${S.gold}. ${TH().tagline}`);
+}
+function doRoll(S, pl, r) {
+  const slots = 2 + (clsOf(pl).perk === "move" ? 1 : 0), res = [];
+  for (let i = 0; i < slots; i++) res.push(r() < 0.6);
+  S.roll = res; S.moves = 1 + res.filter(Boolean).length;
+}
+const dungeonLocked = (S, t) => t.type === "dungeon" && !t.done && t.d > S.dcleared;
+function doMove(S, to, r) {
+  const t = S.map.tiles[to]; if (!t || !adj(S.pos, to)) return;
+  if (dungeonLocked(S, t)) { S.note = `The ${dname(t.d)} is locked. Clear the ${dname(t.d - 1)} first.`; return; }
+  S.prevPos = S.pos; S.pos = to; S.moves--; reveal(S, to);
+  if (!trigger(S, t, r) && S.moves <= 0) endTurn(S, r);
+}
+function trigger(S, t, r) {
+  if (t.done) return false;
+  const p = active(S), T = TH().tiles;
+  if (t.type === "enemy" || t.type === "dungeon") { startCombat(S, t.id, r); return true; }
+  if (t.type === "shop") { S.phase = "shop"; S.moves = 0; const maxT = S.dcleared >= 1 ? 2 : 1;
+    S.shop = { tile: t.id, kind: "items", stock: shuffle(PACK.items.map(i => i.id), r).slice(0, 4), gear: shuffle(GEAR.filter(g => g.cost && g.tier <= maxT).map(g => g.id), r).slice(0, 3) }; return true; }
+  if (t.type === "work") {
+    t.done = true; S.moves = 0; S.phase = "event"; const maxD = [1, 2, 3, 3][t.tier];
+    S.event = { kind: "work", pid: p, qs: Array.from({ length: SHIFT_QS }, () => drawQ(S, null, maxD, r)), i: 0, picks: [], oks: 0, done: false }; return true;
+  }
+  if (t.type === "essay") {
+    t.done = true; S.moves = 0; S.phase = "event"; const sas = PACK.shortAnswers || [];
+    if (sas.length) { const all = sas.map((_, i) => i), fresh = all.filter(i => !S.saUsed.includes(i)), i = pick(r, fresh.length ? fresh : all); S.saUsed.push(i);
+      S.event = { kind: "essay", pid: p, sa: i, q: sas[i].q, c: sas[i].c, done: false }; }
+    else S.event = { kind: "drill", pid: p, qs: Array.from({ length: SHIFT_QS }, () => drawQ(S, null, 3, r)), i: 0, picks: [], oks: 0, done: false };
+    return true;
+  }
+  if (t.type === "tutor") {
+    t.done = true; S.moves = 0; S.phase = "event"; const ts = PACK.tutor || [];
+    if (ts.length) { S.tutUsed = S.tutUsed || []; const all = ts.map((_, i) => i), fresh = all.filter(i => !S.tutUsed.includes(i)), i = pick(r, fresh.length ? fresh : all); S.tutUsed.push(i);
+      S.event = { kind: "tutor", pid: p, ti: i, done: false }; }
+    else { const q = drawQ(S, null, 3, r); // packs without sessions: one hard question, explained
+      S.event = { kind: "tutor", pid: p, ti: -1, done: false, own: { c: q.c, q: q.q + " (Select the right answer.)", key: q.e || "", opts: q.opts.map((o, j) => ({ t: o, ok: j === q.ans, why: j === q.ans ? "This is the right answer." : "Not the answer here." })) } }; }
+    return true;
+  }
+  if (t.type === "recruit") { S.phase = "shop"; S.moves = 0; S.shop = { tile: t.id, kind: "hires", stock: shuffle(PACK.hires.map(h => h.id).filter(id => !S.hires.includes(id)), r).slice(0, 3) }; return true; }
+  if (t.type === "rest") {
+    t.done = true; S.moves = 0;
+    for (const q of S.order) { const o = S.players[q]; o.hp = Math.min(o.max, o.hp + Math.round(o.max * 0.4)); o.focus = Math.max(o.focus, o.maxFocus); }
+    S.phase = "event"; S.event = { kind: "rest", pid: p, done: true }; logp(S, `${T.rest}: everyone heals 40% and refills focus.`); return true;
+  }
+  if (t.type === "cache") {
+    t.done = true; S.moves = 0; const it = pick(r, PACK.items), pl = S.players[p];
+    if (pl.items.length < 4) pl.items.push(it.id); else S.gold += 20;
+    S.phase = "event"; S.event = { kind: "cache", pid: p, item: it.id, full: pl.items.length >= 4 && !pl.items.includes(it.id), done: true };
+    logp(S, `${pl.name} found a ${it.name} in the ${T.cache}.`); return true;
+  }
+  if (t.type === "review") {
+    t.done = true; S.moves = 0; S.phase = "event";
+    S.event = { kind: "review", pid: p, q: drawQ(S, null, [1, 2, 3, 3][t.tier], r), pick: null, done: false }; return true;
+  }
+  if (t.type === "chest") {
+    S.moves = 0; S.phase = "event";
+    S.event = { kind: "lock", pid: p, tile: t.id, q: drawCalcQ(S, r), pick: null, done: false }; return true;
+  }
+  return false;
+}
+/* Lockpicking: a calculation. Built-in packs use the randomized calculators; other packs use their hardest number-heavy questions. */
+const CALC_RE = /\$\d|\d%|\d{3,}|calculat|comput|ratio|formula|×|÷/i;
+function drawCalcQ(S, r) {
+  if (PACK.calcGens && PACK.calcGens.length) { const g = pick(r, PACK.calcGens), o = g.make(r); return prepQ({ ...o, kind: "mc", c: String(g.c), d: 3, id: "lock" + S.rn }, r); }
+  const fresh = q => !S.used.includes(q.id);
+  let pool = PACK.questions.filter(q => q.kind === "mc" && fresh(q) && (CALC_RE.test(q.q) || q.tbl));
+  if (!pool.length) pool = PACK.questions.filter(q => q.d === 3 && fresh(q));
+  if (!pool.length) return drawQ(S, null, 3, r);
+  const q = pick(r, pool); S.used.push(q.id); return prepQ(q, r);
+}
+/* Item reward: a random item into the player's bag, or cash if the bag is full. Chests pick from the pricier half. */
+function grantItem(S, pl, r, rich) {
+  const items = PACK.items.slice().sort((a, b) => b.cost - a.cost), pool = rich ? items.slice(0, Math.max(1, Math.ceil(items.length / 2))) : items, it = pick(r, pool);
+  if (pl.items.length < 4) { pl.items.push(it.id); return { item: it.id }; }
+  S.gold += 20; return { item: it.id, sold: true };
+}
+/* Every answer counts toward per-chapter stats (for weak-spot gear) and PTO accrual. */
+function credit(S, pl, c, ok) {
+  const s = pl.sub[c] = pl.sub[c] || [0, 0]; s[1]++; if (ok) s[0]++;
+  if (ok && S.accrued < PTO_ACCRUE_MAX && ++S.accrue >= PTO_ACCRUE) { S.accrue = 0; S.accrued++; S.lives++; logp(S, `${PTO_ACCRUE} right answers: the team accrued +1 ${lifeWord()}.`); }
+}
+function weakest(pl) {
+  let best = null, bv = 9;
+  for (const k of Object.keys(PACK.meta.subjects)) { const s = (pl.sub || {})[k] || [0, 0], v = (s[0] + 1) / (s[1] + 2); if (v < bv) { bv = v; best = k; } }
+  return best;
+}
+const gearOffer = (tier, r, pl) => shuffle(GEAR.filter(g => g.tier === tier && !Object.values(pl.gear || {}).includes(g.id)).map(g => g.id), r).slice(0, 3);
+function takeGear(S, pl, id) {
+  const g = gearById(id); if (!g) return;
+  const old = equip(pl, id); if (S.event) S.event.took = id;
+  if (old) S.gold += 10 * old.tier;
+  logp(S, `${pl.name} equipped ${g.name} (${RARITY[g.tier]})${old ? ` and traded in the ${old.name} for ${TH().currency}${10 * old.tier}` : ""}.`);
+}
+function endTurn(S, r) {
+  S.roll = null; S.moves = 0; S.turns++;
+  S.chaos = Math.min(10, S.chaos + (S.order.length > 1 ? 0.4 : 0.3)); // a solo player takes every turn, so the meter fills slower
+  for (let k = 0; k < S.order.length; k++) { S.turn = (S.turn + 1) % S.order.length; if (S.players[active(S)].conn) break; }
+  if (S.chaos >= 10) layoffs(S);
+}
+/* Layoff Meter full: everyone takes a hit, the team loses a life, and the meter drops to half. */
+function layoffs(S) {
+  S.chaos = 5;
+  for (const p of S.order) hurt(S, p, 10, {});
+  if (S.lives > 0) S.lives--; else { S.lost = true; S.why = S.why || "layoffs"; }
+  S.note = `Layoffs! The ${TH().chaosName} filled up: everyone takes 10 damage and the team loses a ${lifeWord()}.`;
+  logp(S, S.note);
+  if (S.lost) endGame(S, false);
+}
+/* HP = the damage a team answering exactly at the bar deals by the deadline (on average). */
+const MATCH_X = 1.25, PERFECT_X = 1.25, DODGE_CHANCE = 0.5, CORRECT_DMG = 0.5;
+function fightHP(S, subject, bar, rounds) {
+  const n = S.order.length, k = Object.keys(PACK.meta.subjects).length; let per = 0;
+  for (const p of S.order) { const pl = S.players[p], c = clsOf(pl), pm = c.subject ? (subject === c.subject ? 0.6 : 0) + 0.4 / k : 0; per += c.atk * (1 + (MATCH_X - 1) * pm); } // base attack, so hires and buffs are a real edge
+  const perfect = n > 1 ? 1 + (PERFECT_X - 1) * Math.pow(bar, n - 1) : 1;
+  return Math.max(10, Math.round(per * bar * perfect * rounds * 1.06)); // 1.06: room for gear, bounties and accrual to matter without making it easy
+}
+function startCombat(S, tileId, r) {
+  const t = S.map.tiles[tileId], room = t.type === "dungeon" ? t.rooms[t.progress] : t, e = enemyById(room.enemy), n = S.order.length, tierM = 1 + 0.15 * t.tier;
+  const train = t.type === "enemy", bar = room.bar || 0.7, rounds = train ? TRAIN_QS(n) : Math.max(4, Math.ceil(FIGHT_QS[e.boss ? "boss" : e.elite ? "elite" : "normal"] / n));
+  const hp = fightHP(S, e.subject, bar, rounds);
+  S.phase = "combat"; S.moves = 0;
+  S.combat = { tile: tileId, tier: t.tier, train, bar, rounds, okTot: 0, qTot: 0, guard: hireSum(S, "guard"), round: 0, step: "talk", streak: {}, missed: {}, qs: {}, ans: {}, elim: {}, extra: {}, deadline: 0,
+    talkUntil: S.now + TALK_MS, reveal: null, over: null, revealAt: 0, dungeon: t.type === "dungeon" ? { d: t.d, room: t.progress, of: t.rooms.length } : null,
+    enemy: { id: e.id, name: e.name, art: e.art, subject: e.subject, hp, max: hp, dmg: Math.round(e.dmg * tierM * (1 + 0.05 * Math.floor(S.chaos)) * (n === 1 ? 0.7 : 1) * (train ? TRAIN_DMG : 1)), /* a solo player takes every hit */ boss: e.boss, elite: e.elite, quip: e.quip } };
+  for (const p of S.order) { const o = S.players[p]; if (clsOf(o).perk === "shield" && o.shield < 1) o.shield = 1; }
+  logp(S, `${e.boss ? "BOSS: " : ""}${e.name} blocks the way.`);
+  if (S.local || connected(S).length <= 1) beginRound(S, r);
+}
+function beginRound(S, r) {
+  const C = S.combat, keys = Object.keys(PACK.meta.subjects), maxD = C.enemy.boss ? 3 : [1, 2, 3, 3][C.tier];
+  C.round++; C.qs = {}; C.ans = {}; C.elim = {}; C.extra = {}; C.reveal = null; C.step = "answer";
+  C.deadline = S.local ? 0 : S.now + ANSWER_MS;
+  for (const p of S.order) {
+    const pl = S.players[p], w = gearOf(pl, "weapon"), ar = gearOf(pl, "armor"), miss = C.missed[p] || [];
+    if (w && w.retry && miss.length && r() < 0.5) { const src = PACK.questions.find(q => q.id === miss.shift()); if (src) { C.qs[p] = { ...prepQ(src, r), retry: true }; continue; } }
+    C.qs[p] = drawQ(S, ar && ar.lean && r() < ar.lean ? weakest(pl) : r() < 0.6 ? C.enemy.subject : pick(r, keys), maxD, r);
+  }
+}
+function cAnswer(S, a) {
+  const C = S.combat; if (C.step !== "answer" || !C.qs[a.pid] || C.ans[a.pid] !== undefined) return;
+  const n = C.qs[a.pid].opts.length; C.ans[a.pid] = Number.isInteger(a.i) && a.i >= 0 && a.i < n ? a.i : -1;
+  afterConn(S);
+}
+function cTimeout(S) {
+  const C = S.combat; if (!C.deadline) return;
+  for (const p of S.order) if (C.ans[p] === undefined && S.now >= C.deadline + (C.extra[p] || 0)) C.ans[p] = -1;
+  afterConn(S);
+}
+/* Resolve the round once every connected player has answered. */
+function afterConn(S) {
+  const C = S.combat; if (S.phase !== "combat" || !C || C.step !== "answer") return;
+  const live = connected(S); if (!live.length) return;
+  if (live.every(p => C.ans[p] !== undefined)) resolveRound(S);
+}
+function hurt(S, p, d, rec) {
+  const pl = S.players[p]; if (pl.shield > 0) { pl.shield--; rec.blocked = true; return; }
+  pl.hp -= d; rec.hit = d;
+  if (pl.hp <= 0) { if (S.lives > 0) { S.lives--; pl.hp = Math.ceil(pl.max / 2); rec.pto = true; } else { pl.hp = 0; rec.ko = true; S.lost = true; S.why = S.why || "hp"; } }
+}
+function resolveRound(S) {
+  const C = S.combat, r = rr(S), n = S.order.length, per = {}; let total = 0, okN = 0;
+  const appeal = !C.appealed && S.order.some(p => clsOf(S.players[p]).perk === "appeal");
+  for (const p of S.order) {
+    const pl = S.players[p], q = C.qs[p], pk = C.ans[p] === undefined ? -1 : C.ans[p], c = clsOf(pl), w = gearOf(pl, "weapon") || {}, ar = gearOf(pl, "armor") || {};
+    let ok = pk === q.ans, appealed = false; const real = ok, usedLL = !!(C.elim[p] || C.extra[p]), weak = weakest(pl);
+    if (!ok && appeal && !C.appealed) { ok = true; appealed = true; C.appealed = true; }
+    pl.tot++; let dmg = 0, match = false; const perks = [];
+    if (ok) {
+      pl.ok++; okN++; match = q.c === c.subject || !!ar.cross;
+      let m = (match ? MATCH_X : 1) * (1 + (pl.buff || 0) / 100); pl.buff = 0;
+      if (w.nohint && !usedLL) { m *= 1 + w.nohint / 100; perks.push("no hints"); }
+      const fl = Math.min(50, (w.flow || 0) * (C.streak[p] || 0)); if (fl) { m *= 1 + fl / 100; perks.push(`flow +${fl}%`); }
+      if (q.retry && w.retry) { m *= 1 + w.retry / 100; perks.push("retry fixed"); if (w.retryFocus) pl.focus = Math.min(9, pl.focus + 1); }
+      dmg = pl.atk * m;
+    }
+    if (real && usedLL && ar.refund) { pl.focus = Math.min(9, pl.focus + 1); perks.push("focus back"); }
+    if (real && ar.weak && q.c === weak) { pl.hp = Math.min(pl.max, pl.hp + ar.weak); if (ar.weakFocus) pl.focus = Math.min(9, pl.focus + 1); perks.push("weak spot +" + ar.weak + " HP"); }
+    if (!real && w.retry && PACK.questions.some(x => x.id === q.id)) (C.missed[p] = C.missed[p] || []).push(q.id);
+    C.streak[p] = real ? (C.streak[p] || 0) + 1 : 0;
+    credit(S, pl, q.c, real);
+    if (appealed) { pl.ok--; } // the answer still counts as wrong in your stats
+    per[p] = { ok, appealed, pick: pk, dmg: Math.round(dmg), match, usedLL, perks, hit: 0, blocked: false, guarded: false, pto: false, ko: false }; total += dmg;
+  }
+  const perfect = okN === n && n > 1; if (perfect) total *= PERFECT_X; total = Math.round(total);
+  C.okTot += okN; C.qTot += n;
+  const regen = hireSum(S, "regen");
+  if (regen) for (const p of S.order) { const o = S.players[p]; o.hp = Math.min(o.max, o.hp + regen); }
+  for (const p of S.order) if (per[p].ok && clsOf(S.players[p]).perk === "heal") for (const q of S.order) { const o = S.players[q]; o.hp = Math.min(o.max, o.hp + 6); }
+  S.chaos = Math.min(10, S.chaos + 0.6 * (n - okN) / n);
+  C.enemy.hp = Math.max(0, C.enemy.hp - total);
+  S.grid.push(perfect || (n === 1 && okN) ? 2 : okN ? 1 : 0);
+  if (C.enemy.hp <= 0) {
+    C.over = "win";
+    const t = S.map.tiles[C.tile], bonus = hireSum(S, "gold");
+    if (t.type === "dungeon") {
+      t.progress++;
+      if (t.progress >= t.rooms.length) {
+        t.done = true; S.dcleared = Math.max(S.dcleared, t.d + 1);
+        if (t.d === 2) C.final = true;
+        else { const g = DUNGEON_PLAN[t.d].reward + bonus + BOUNTY_PER_RIGHT * C.okTot; S.gold += g; reopenWork(S); logp(S, `${dname(t.d)} cleared! +${TH().currency}${g}. The ${dname(t.d + 1)} is open, and the ${TH().tiles.work}s and ${TH().tiles.tutor}s reopen.`); }
+      } else { C.nextRoom = true; const g = BOUNTY_PER_RIGHT * C.okTot; S.gold += g; C.pay = g; }
+    } else { t.done = true; const g = BOUNTY_BASE + BOUNTY_TIER * C.tier + BOUNTY_PER_RIGHT * C.okTot + bonus; S.gold += g; C.pay = g; logp(S, `${C.enemy.name} cleared! Bounty +${TH().currency}${g} (${C.okTot} right answers).`); C.drop = rivalDrop(S, C, r); }
+    const fr = hireSum(S, "focus");
+    for (const p of S.order) { const o = S.players[p]; o.focus = Math.min(9, o.focus + fr + (clsOf(o).perk === "focus" ? 1 : 0)); if (clsOf(o).perk === "gold") S.gold += 10; }
+  } else {
+    // The enemy swings at everyone. Wrong = full hit. Right = DODGE_CHANCE to dodge, otherwise half damage.
+    const live = S.order.filter(p => S.players[p].conn || S.local), hitOrder = live.filter(p => !per[p].ok).concat(live.filter(p => per[p].ok));
+    for (const p of hitOrder) {
+      const pp = S.players[p], ar = gearOf(pp, "armor") || {}, x = per[p], full = Math.round(C.enemy.dmg * (clsOf(pp).perk === "tough" ? 0.75 : 1) * (1 - gearSum(pp, "def") / 100));
+      if (x.ok && r() < DODGE_CHANCE + (!x.usedLL && !x.appealed ? ar.prepared || 0 : 0)) { x.dodged = true; continue; }
+      if (C.guard > 0) { C.guard--; x.guarded = true; continue; }
+      if (x.ok) x.half = true;
+      hurt(S, p, x.ok ? Math.ceil(full * CORRECT_DMG) : full, x);
+    }
+    if (S.lost) C.over = "lose";
+    else if (C.round >= C.rounds && C.enemy.boss && C.dungeon && C.dungeon.d === 2) { // the final boss gives no second chance
+      C.over = "lose"; S.lost = true; S.why = "final";
+      logp(S, `Missed the deadline on ${C.enemy.name}. The board lets everyone go.`);
+    }
+    else if (C.round >= C.rounds && C.train) { C.over = "deadline"; logp(S, `${C.enemy.name} outlasted the team. No PTO lost — come back for another try.`); }
+    else if (C.round >= C.rounds) { // missed the deadline
+      C.over = "deadline";
+      if (S.lives > 0) S.lives--; else { S.lost = true; C.over = "lose"; S.why = S.why || "deadline"; }
+      logp(S, `Missed the deadline on ${C.enemy.name}. −1 ${lifeWord()}.`);
+    }
+  }
+  C.reveal = { per, total, perfect, okN }; C.step = "reveal"; C.revealAt = S.now;
+}
+/* Rival drops: a clean win (80%+ right) always drops something. Gear only drops as an upgrade for the player whose turn it is; tier 2 from region 2 on. */
+function rivalDrop(S, C, r) {
+  const p = active(S), pl = S.players[p]; if (!pl) return null;
+  const clean = C.qTot && C.okTot / C.qTot >= CLEAN_WIN, roll = r(), tier = C.tier >= 1 && r() < 0.5 ? 2 : 1;
+  const ups = GEAR.filter(g => g.tier === tier && g.cost && (!gearOf(pl, g.slot) || gearOf(pl, g.slot).tier < tier));
+  if (ups.length && roll < DROP_GEAR) { const g = pick(r, ups); takeGear(S, pl, g.id); return { pid: p, gear: g.id, clean }; }
+  if (roll < DROP_GEAR + DROP_ITEM || clean) { const x = grantItem(S, pl, r); logp(S, `${pl.name} picked up a ${PACK.items.find(i => i.id === x.item).name}${x.sold ? ` (bag full: sold for ${TH().currency}20)` : ""}.`); return { pid: p, ...x, clean }; }
+  return null;
+}
+function reopenWork(S) { for (const id in S.map.tiles) if (S.map.tiles[id].type === "work" || S.map.tiles[id].type === "tutor") S.map.tiles[id].done = false; }
+function cNext(S, r) {
+  const C = S.combat;
+  if (C.over === "win") {
+    if (C.final) return endGame(S, true);
+    if (C.nextRoom) return startCombat(S, C.tile, r);
+    S.phase = "map"; S.combat = null; endTurn(S, r); return;
+  }
+  if (C.over === "lose") return endGame(S, false);
+  if (C.over === "deadline") { S.phase = "map"; S.combat = null; if (S.prevPos) S.pos = S.prevPos; endTurn(S, r); return; }
+  beginRound(S, r);
+}
+function shiftAnswer(S, E, pl, a, r) {
+  const q = E.qs[E.i], pk = Number.isInteger(a.i) ? a.i : -1, ok = pk === q.ans;
+  E.picks.push(pk); pl.tot++; if (ok) { pl.ok++; E.oks++; } else S.chaos = Math.min(10, S.chaos + 0.3);
+  credit(S, pl, q.c, ok); E.i++;
+  if (E.i < E.qs.length) return;
+  E.done = true;
+  if (E.kind === "work") { E.pay = E.oks * WORK_PAY + (E.oks === E.qs.length ? WORK_PERFECT : 0); S.gold += E.pay; logp(S, `${pl.name} worked a shift: ${E.oks}/${E.qs.length} right, +${TH().currency}${E.pay}.`); }
+  else { E.tier = E.oks; if (E.tier) E.offer = gearOffer(E.tier, r, pl); }
+}
+function essayAnswer(S, E, pl, text, r) {
+  const sa = PACK.shortAnswers[E.sa]; if (!sa) return;
+  const g = gradeSA(sa, text);
+  Object.assign(E, { text: String(text).slice(0, 2000), score: Math.round(g.score * 100), items: g.items, words: g.words, model: sa.model, tier: saTier(g.score), done: true });
+  pl.tot++; if (E.tier >= 2) pl.ok++; credit(S, pl, sa.c, E.tier >= 2);
+  if (E.tier) E.offer = gearOffer(E.tier, r, pl);
+  logp(S, `${pl.name} scored ${E.score}% at the ${TH().tiles.essay}${E.tier ? ` and earned ${RARITY[E.tier]} gear` : ""}.`);
+}
+const tutorOf = E => E.own || (PACK.tutor || [])[E.ti];
+/* Employer 1-1: every choice counts (picked if right, left alone if wrong). Low stakes: it pays a little and teaches the why. */
+function tutorAnswer(S, E, pl, picks) {
+  const T = tutorOf(E); if (!T) return;
+  const set = new Set((Array.isArray(picks) ? picks : []).filter(i => Number.isInteger(i) && i >= 0 && i < T.opts.length));
+  E.picks = [...set].sort((x, y) => x - y); E.right = T.opts.filter((o, i) => o.ok === set.has(i)).length; E.total = T.opts.length; E.done = true;
+  const perfect = E.right === E.total; pl.tot++; if (perfect) pl.ok++; credit(S, pl, T.c, perfect);
+  E.pay = perfect ? TUTOR_PAY : E.right / E.total >= 0.7 ? TUTOR_PART : 0; S.gold += E.pay;
+  if (perfect) pl.focus = Math.min(9, pl.focus + 1);
+  logp(S, `${pl.name} had an ${TH().tiles.tutor}: ${E.right}/${E.total} choices right${E.pay ? `, +${TH().currency}${E.pay}` : ""}.`);
+}
+function eAnswer(S, a) {
+  const E = S.event; if (E.done || a.pid !== E.pid) return;
+  if (E.kind === "tutor") return tutorAnswer(S, E, S.players[a.pid], a.picks);
+  if (E.kind === "essay") return essayAnswer(S, E, S.players[a.pid], typeof a.text === "string" ? a.text : "", rr(S));
+  if (E.kind === "work" || E.kind === "drill") return shiftAnswer(S, E, S.players[a.pid], a, rr(S));
+  if (E.kind !== "review" && E.kind !== "lock") return;
+  const pl = S.players[a.pid], r = rr(S); E.pick = Number.isInteger(a.i) ? a.i : -1; E.ok = E.pick === E.q.ans; E.done = true; pl.tot++; credit(S, pl, E.q.c, E.ok);
+  if (E.kind === "lock") {
+    if (E.ok) { pl.ok++; S.map.tiles[E.tile].done = true; S.gold += 15; E.reward = grantItem(S, pl, r, true); logp(S, `${pl.name} cracked the ${TH().tiles.chest}.`); }
+    else { E.rec = {}; hurt(S, a.pid, 10, E.rec); S.chaos = Math.min(10, S.chaos + 0.5); }
+    return;
+  }
+  if (E.ok) { pl.ok++; S.gold += 15; for (const p of S.order) { const o = S.players[p]; o.focus = Math.min(9, o.focus + 1); } E.reward = grantItem(S, pl, r, false); }
+  else { E.rec = {}; hurt(S, a.pid, 12, E.rec); S.chaos = Math.min(10, S.chaos + 1); }
+}
+function lifeline(S, pl, pid, kind, r) {
+  if (S.phase !== "combat" || S.combat.step !== "answer" || !pl || pl.focus < 1) return;
+  const C = S.combat, q = C.qs[pid]; if (!q || C.ans[pid] !== undefined) return;
+  if (kind === "fifty") {
+    if (q.opts.length < 3 || C.elim[pid]) return;
+    C.elim[pid] = shuffle(q.opts.map((_, i) => i).filter(i => i !== q.ans), r).slice(0, q.opts.length >= 4 ? 2 : 1); pl.focus--;
+  } else if (kind === "time" && C.deadline) { C.extra[pid] = (C.extra[pid] || 0) + 15000; pl.focus--; }
+}
+function buy(S, pl, id) {
+  const g = gearById(id);
+  if (g && S.shop.gear && S.shop.gear.includes(id)) { if (S.gold < g.cost || Object.values(pl.gear || {}).includes(id)) return; S.gold -= g.cost; S.shop.gear = S.shop.gear.filter(x => x !== id); takeGear(S, pl, id); return; }
+  const it = PACK.items.find(x => x.id === id); if (!it || !S.shop.stock.includes(id) || S.gold < it.cost || pl.items.length >= 4) return;
+  S.gold -= it.cost; pl.items.push(id); S.shop.stock = S.shop.stock.filter(x => x !== id); logp(S, `${pl.name} expensed a ${it.name}.`);
+}
+function hire(S, pl, id) {
+  const h = hireById(id); if (!h || !S.shop.stock.includes(id) || S.gold < h.cost || S.hires.length >= MAX_HIRES) return;
+  S.gold -= h.cost; S.hires.push(id); S.shop.stock = S.shop.stock.filter(x => x !== id);
+  const atk = h.fx.filter(f => f.op === "atk").reduce((a, f) => a + f.n, 0);
+  if (atk) for (const p of S.order) S.players[p].atk += atk;
+  logp(S, `${pl.name} hired ${h.name}.`);
+}
+function useItem(S, pl, idx) {
+  if (!pl || !["map", "shop", "combat", "event"].includes(S.phase)) return;
+  if (S.phase === "combat" && S.combat.step === "reveal") return;
+  const it = PACK.items.find(x => x.id === pl.items[idx]); if (!it) return;
+  const C = S.combat, inFight = S.phase === "combat" && C.step === "answer";
+  if (it.fx.some(f => COMBAT_OPS.includes(f.op)) && !inFight) return;
+  if (it.fx.some(f => f.op === "reroll") && C.ans[pl.id] !== undefined) return;
+  pl.items.splice(idx, 1);
+  for (const f of it.fx) {
+    const who = f.who === "team" ? S.order.map(p => S.players[p]) : [pl];
+    if (f.op === "gold") S.gold = Math.max(0, S.gold + f.n);
+    else if (f.op === "chaos") S.chaos = clamp(S.chaos + f.n, 0, 10);
+    else if (f.op === "lives") S.lives = Math.max(0, S.lives + f.n);
+    else if (f.op === "rounds") C.rounds += clamp(f.n, 1, 5);
+    else if (f.op === "cut") C.enemy.hp = Math.max(1, C.enemy.hp - Math.round(C.enemy.max * clamp(f.n, 1, 60) / 100));
+    else if (f.op === "reroll") { const q = C.qs[pl.id]; C.qs[pl.id] = drawQ(S, q.c, 3, rr(S)); delete C.elim[pl.id]; }
+    else for (const o of who) {
+      if (f.op === "heal") o.hp = Math.min(o.max, o.hp + f.n);
+      else if (f.op === "maxhp") { o.max += f.n; o.hp += f.n; }
+      else if (f.op === "shield") o.shield += f.n;
+      else if (f.op === "focus") o.focus = Math.min(9, o.focus + f.n);
+      else if (f.op === "dmgBuff") o.buff += f.n;
+    }
+  }
+  logp(S, `${pl.name} used ${it.name}.`);
+}
+function endGame(S, win) {
+  S.phase = "end"; S.combat = null; S.event = null; S.shop = null;
+  S.result = { win, ms: S.now - S.t0, rounds: S.grid.length, why: S.why || "" };
+}
+function resetToLobby(S) {
+  Object.assign(S, { phase: "lobby", seed: newSeed(), map: null, pos: null, combat: null, event: null, shop: null, result: null, lost: false, grid: [], log: [], rn: 0, hires: [], seen: {} });
+}
+function fxText(it) {
+  if (it.desc) return it.desc;
+  return it.fx.map(f => `${FX_OPS[f.op]} ${f.n > 0 ? "+" : ""}${f.n}${f.who === "team" ? " (team)" : ""}`).join(", ");
+}
+function hireText(h) { return h.desc || h.fx.map(f => HIRE_OPS[f.op].replace("N", f.n)).join(" "); }
+
+/* ============================================================
+   NETWORK — host-authoritative over PeerJS. Clients send intents; the host sends state.
+   ============================================================ */
+const PEER_PREFIX = "studyquest-";
+const NET = { mode: null, peer: null, conns: new Map(), conn: null, code: "", offset: 0, status: "", tries: 0 };
+const CLIENT_TYPES = new Set(["PICK_GEAR", "PICK", "ROLL", "MOVE", "END_MOVE", "BUY", "SHOP_DONE", "USE", "ANSWER", "LIFELINE", "NEXT", "EVENT_DONE", "LEAVE"]);
+let S = null, ME = null;
+const UI = { name: store.get("name", ""), err: "", lost: false, shownFor: null, pickFor: null, packMsg: null, anim: "", seenReveal: "", joinCode: "" };
+const TOKEN = (() => { let t = store.get("token", ""); if (!t) { t = newSeed() + newSeed(); store.set("token", t); } return t; })();
+
+function dispatch(a) {
+  if (NET.mode === "client") { if (NET.conn && NET.conn.open) NET.conn.send({ t: "intent", a }); return; }
+  if (!S) return;
+  a.now = Date.now(); if (!a.pid) a.pid = ME;
+  try { reduce(S, a); } catch (e) { console.error(e); toast("Something broke: " + e.message); }
+  changed();
+}
+function changed() { save(); broadcast(); render(); turnNotice(); }
+/* After a turn ends, every device says whose move it is. */
+function turnNotice() {
+  if (!S || S.phase !== "map") { UI.turnKey = ""; return; }
+  const key = S.turns + ":" + active(S); if (UI.turnKey === key) return;
+  const first = !UI.turnKey; UI.turnKey = key; if (first && S.turns === 0 && NET.mode !== "local") return;
+  const p = active(S); toast(NET.mode !== "local" && p === ME ? "Your turn — roll for moves." : `${nm(S, p)}'s turn.`);
+}
+function redact(pid) {
+  const s = JSON.parse(JSON.stringify(S)); delete s.tokens; delete s.used;
+  if (s.combat && s.combat.step === "answer") for (const p in s.combat.qs) {
+    if (p !== pid) s.combat.qs[p] = { hidden: true, c: s.combat.qs[p].c };
+    else { delete s.combat.qs[p].ans; delete s.combat.qs[p].e; }
+  }
+  if (s.event && s.event.qs && !s.event.done) for (let j = s.event.i; j < s.event.qs.length; j++) { if (s.event.pid !== pid) s.event.qs[j] = { hidden: true }; else { delete s.event.qs[j].ans; delete s.event.qs[j].e; } }
+  if (s.event && (s.event.kind === "review" || s.event.kind === "lock") && !s.event.done) { if (s.event.pid !== pid) s.event.q = { hidden: true }; else { delete s.event.q.ans; delete s.event.q.e; } }
+  return s;
+}
+function broadcast() {
+  if (NET.mode !== "host") return;
+  for (const [pid, c] of NET.conns) if (c.open) try { c.send({ t: "state", s: redact(pid), now: Date.now() }); } catch (e) {}
+}
+function sendPack(c) { c.send({ t: "pack", packId: PACK_ID, pack: BUILTIN_PACKS[PACK_ID] ? null : PACK_RAW }); }
+function makeHostPeer() {
+  if (!window.Peer) { NET.status = "offline"; render(); return; }
+  if (NET.peer) try { NET.peer.destroy(); } catch (e) {}
+  NET.status = "opening";
+  const peer = new Peer(PEER_PREFIX + NET.code.toLowerCase(), { debug: 0 }); NET.peer = peer;
+  peer.on("open", () => { NET.status = "open"; NET.tries = 0; render(); });
+  peer.on("connection", onConn);
+  peer.on("disconnected", () => { if (NET.peer === peer && !peer.destroyed) setTimeout(() => { try { peer.reconnect(); } catch (e) {} }, 1500); });
+  peer.on("error", e => {
+    if (NET.peer !== peer) return;
+    if (e.type === "unavailable-id") {
+      if (S.phase === "lobby" && !S.resumed) { NET.code = S.code = roomCode(); makeHostPeer(); return; }
+      if (NET.tries++ < 20) { NET.status = "reclaiming"; render(); setTimeout(makeHostPeer, 3000); return; } // the old room id can linger for a minute after a reload
+    }
+    NET.status = "error"; NET.statusMsg = e.type; render();
+  });
+}
+function onConn(c) {
+  c.on("data", m => hostMsg(c, m));
+  c.on("close", () => { if (c.pid && NET.conns.get(c.pid) === c) { NET.conns.delete(c.pid); dispatch({ type: "CONN", pid: c.pid, on: false }); } });
+  c.on("error", () => {});
+}
+function hostMsg(c, m) {
+  if (!m || typeof m !== "object" || !S) return;
+  if (m.t === "hello") {
+    const token = str(String(m.token || ""), 40); let pid = S.tokens[token];
+    if (pid && S.players[pid]) {
+      const old = NET.conns.get(pid); if (old && old !== c) try { old.close(); } catch (e) {}
+      c.pid = pid; NET.conns.set(pid, c); c.send({ t: "welcome", pid }); sendPack(c); dispatch({ type: "CONN", pid, on: true }); return;
+    }
+    if (S.phase !== "lobby") return c.send({ t: "err", msg: "This run already started. Ask the host to start a new run, then rejoin." });
+    if (S.order.length >= MAX_PLAYERS) return c.send({ t: "err", msg: "This room is full (6 players max)." });
+    pid = "p" + (++S.pidN); S.tokens[token] = pid; c.pid = pid; NET.conns.set(pid, c);
+    c.send({ t: "welcome", pid }); sendPack(c);
+    dispatch({ type: "JOIN", pid, name: m.name });
+  } else if (m.t === "intent" && c.pid && m.a && CLIENT_TYPES.has(m.a.type)) {
+    const a = m.a;
+    dispatch({ type: a.type, pid: c.pid, i: Number.isInteger(a.i) ? a.i : -1, to: typeof a.to === "string" ? a.to.slice(0, 8) : "", cls: typeof a.cls === "string" ? a.cls.slice(0, 40) : "",
+      item: typeof a.item === "string" ? a.item.slice(0, 40) : "", idx: Number.isInteger(a.idx) ? a.idx : -1, kind: a.kind === "time" ? "time" : "fifty", round: Number.isInteger(a.round) ? a.round : null, text: typeof a.text === "string" ? a.text.slice(0, 2000) : "", picks: Array.isArray(a.picks) ? a.picks.slice(0, 8).filter(Number.isInteger) : null });
+  }
+}
+function startHost(resume) {
+  NET.mode = "host";
+  if (!resume) { S = newGame(newSeed(), QS.get("code") || roomCode()); ME = "p1"; S.pidN = 1; S.tokens[TOKEN] = "p1"; reduce(S, { type: "JOIN", pid: "p1", name: UI.name, now: Date.now() }); }
+  NET.code = S.code; makeHostPeer(); changed();
+}
+function startLocal(resume) {
+  NET.mode = "local";
+  if (!resume) { S = newGame(newSeed(), "LOCAL"); S.local = true; ME = "p1"; S.pidN = 1; reduce(S, { type: "JOIN", pid: "p1", name: UI.name, now: Date.now() }); UI.pickFor = "p1"; }
+  changed();
+}
+function startClient(code) {
+  code = String(code || "").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 4);
+  if (code.length !== 4) return toast("Room codes have 4 letters.");
+  if (!window.Peer) { UI.err = "Online play could not load on this device. Use \"Play on one device\" instead."; return render(); }
+  NET.mode = "client"; NET.code = code; S = null; ME = null; UI.err = ""; UI.lost = false; render();
+  if (NET.peer) try { NET.peer.destroy(); } catch (e) {}
+  const peer = new Peer({ debug: 0 }); NET.peer = peer;
+  peer.on("open", openConn);
+  peer.on("disconnected", () => { if (!peer.destroyed) setTimeout(() => { try { peer.reconnect(); } catch (e) {} }, 1500); });
+  peer.on("error", e => {
+    if (e.type === "peer-unavailable") UI.err = S ? "" : `No open room called ${code}. Check the code, or ask the host to open the room.`;
+    else UI.err = `Connection problem (${e.type}).`;
+    if (S) UI.lost = true; render();
+  });
+  clearTimeout(NET.timer);
+  NET.timer = setTimeout(() => { if (!S && !UI.err) { UI.err = "Can't reach the room. Some cellular networks block direct connections: try Wi-Fi, or play on one device."; render(); } }, 15000);
+}
+function openConn() {
+  const c = NET.peer.connect(PEER_PREFIX + NET.code.toLowerCase(), { reliable: true }); NET.conn = c;
+  c.on("open", () => { c.send({ t: "hello", name: UI.name, token: TOKEN }); });
+  c.on("data", clientMsg);
+  c.on("close", () => { if (NET.mode === "client" && NET.conn === c) { UI.lost = true; render(); } });
+}
+function clientMsg(m) {
+  if (!m || typeof m !== "object") return;
+  if (m.t === "welcome") { ME = m.pid; UI.lost = false; UI.err = ""; }
+  else if (m.t === "pack") { const v = BUILTIN_PACKS[m.packId] ? loadById(m.packId) : loadPack(m.pack, m.packId); if (!v.ok) { UI.err = "The host's pack did not load: " + v.errors[0]; loadDefault(); } render(); }
+  else if (m.t === "state") { S = m.s; NET.offset = Date.now() - m.now; UI.lost = false; render(); turnNotice(); }
+  else if (m.t === "err") { UI.err = String(m.msg || "Error").slice(0, 200); render(); }
+}
+function leaveGame() {
+  if (NET.mode === "client" && NET.conn && NET.conn.open) try { NET.conn.send({ t: "intent", a: { type: "LEAVE" } }); } catch (e) {}
+  if (NET.mode !== "client") store.del("save");
+  if (NET.peer) try { NET.peer.destroy(); } catch (e) {}
+  Object.assign(NET, { mode: null, peer: null, conns: new Map(), conn: null, code: "" });
+  S = null; ME = null; UI.err = ""; UI.lost = false;
+  try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+  render();
+}
+/* host + local autosave, so a reload can resume the run */
+function save() {
+  if (!S || (NET.mode !== "host" && NET.mode !== "local") || QS.has("test")) return;
+  if (S.phase === "end") { store.del("save"); return; }
+  store.set("save", { S, me: ME, mode: NET.mode, packId: PACK_ID, pack: BUILTIN_PACKS[PACK_ID] ? null : PACK_RAW, at: Date.now() });
+}
+function resume() {
+  const sv = store.get("save", null); if (!sv) return;
+  const v = BUILTIN_PACKS[sv.packId] ? loadById(sv.packId) : loadPack(sv.pack, sv.packId);
+  if (!v.ok) { store.del("save"); loadDefault(); return toast("That saved run's pack is broken."); }
+  S = sv.S; ME = sv.me; S.resumed = true;
+  if (sv.mode === "local") return startLocal(true);
+  for (const p of S.order) if (p !== ME) S.players[p].conn = false;
+  startHost(true);
+}
+
+/* ============================================================
+   VIEWS
+   ============================================================ */
+const app = document.getElementById("app");
+function toast(msg) { const t = document.getElementById("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, 3200); }
+function tableHTML(t) { return `<table class="data">${t.map((r, i) => `<tr>${r.map(c => i === 0 ? `<th>${esc(c)}</th>` : `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</table>`; }
+const subjName = c => (PACK.meta.subjects[c] || "Any topic");
+const money = n => TH().currency + Math.round(n).toLocaleString("en-US");
+const salary = n => "$" + (n >= 1000 ? Math.round(n / 1000) + "k" : n);
+const isHostish = () => NET.mode === "host" || NET.mode === "local";
+const mmss = ms => { const s = Math.max(0, Math.round(ms / 1000)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+function inviteURL() { return SITE_URL + "#" + NET.code; }
+/* who is looking at the screen right now (pass-and-play rotates it) */
+function viewer() {
+  if (NET.mode !== "local") return ME;
+  if (S.phase === "combat" && S.combat.step === "answer") return S.order.find(p => S.combat.ans[p] === undefined) || ME;
+  if (S.phase === "event") return S.event.pid;
+  if (S.phase === "map" || S.phase === "shop") return active(S);
+  return ME;
+}
+function bind(sel, fn) { app.querySelectorAll(sel).forEach(el => el.onclick = e => fn(el, e)); }
+
+function render() {
+  if (!PACK) loadDefault();
+  if (NET.mode === "client" && !S) return connectingView();
+  if (!S) return titleView();
+  if (S.phase === "lobby") return lobbyView();
+  if (S.phase === "end") return endView();
+  return gameView();
+}
+
+function titleView() {
+  const sv = store.get("save", null), hash = (location.hash.match(/^#([A-Za-z]{4})$/) || [])[1];
+  const sk = Object.values(PACK.meta.subjects);
+  app.innerHTML = `
+  <div class="center">
+    <div class="logo">${personSVG({ hat: "none", prop: "briefcase" }, 92)}<div><h1 style="margin:0">${esc(TH().gameTitle.toUpperCase())}</h1><p class="tagline">${esc(TH().tagline)}</p></div>${enemySVG(PACK.enemies.find(e => e.boss).art, 96, false, true)}</div>
+    <p class="muted">A co-op study board game for 1–6 players. Move through the office, answer your own questions, and combine your answers into damage.</p>
+  </div>
+  <div class="stack" style="max-width:560px;margin:0 auto">
+    <div class="box">
+      <label class="small">Your name</label>
+      <input type="text" id="nm" maxlength="16" placeholder="e.g. Dana" value="${esc(UI.name)}">
+    </div>
+    ${hash ? `<button class="btn dark center" id="joinHash">Join room ${esc(hash.toUpperCase())}</button>` : ""}
+    ${sv && sv.S && sv.S.phase !== "lobby" ? `<button class="btn center" id="resume">Resume your last run (${sv.mode === "local" ? "one device" : "room " + esc(sv.S.code)})</button>` : ""}
+    <button class="btn ${hash ? "" : "dark"} center" id="host">Host a room (friends join from their phones)</button>
+    <div class="box"><div class="row"><input type="text" class="codein" id="code" maxlength="4" placeholder="CODE" value="${esc(UI.joinCode || "")}"><button class="btn" id="join">Join a room</button></div>
+      <div class="hint">Got a link? It fills in the code for you.</div></div>
+    <button class="btn center" id="local">Play on one device (solo or pass the phone)</button>
+    <div class="row" style="justify-content:center"><button class="btn" id="sendgame">Send the game to friends</button></div>
+    ${UI.err ? `<div class="err">${esc(UI.err)}</div>` : ""}
+    <div class="box small">
+      <b>Pack:</b> ${esc(PACK.meta.title)} · ${PACK.questions.length} questions<br><span class="muted">${sk.map(esc).join(" · ")}</span>
+      <div class="hint">The host can load a different class's pack in the lobby.${PACK_MAKER_URL ? ` <a href="${PACK_MAKER_URL}" target="_blank" rel="noopener">Make a pack from your slides →</a>` : ""}</div>
+    </div>
+    <details class="box small"><summary><b>How to play</b></summary>
+      <p>Everyone picks a job. The team starts with a small sign-on bonus. On your turn, roll for moves and walk the office.</p>
+      <p><b>Money:</b> win fights for a bounty (bigger for harder rooms, +${money(BOUNTY_PER_RIGHT)} per right answer). Work a 3-question shift at the ${esc(TH().tiles.work)} (${money(WORK_PAY)} per right answer; they reopen after each dungeon). Reviews and ${esc(TH().tiles.chest)}s pay too.</p>
+      <p><b>${esc(TH().tiles.tutor)}:</b> a low-stakes coaching session. Select all the choices that apply, then read why each one is right or wrong — good practice for short answers. They reopen after each dungeon.</p>
+      <p><b>${esc(TH().livesName)}:</b> every ${PTO_ACCRUE} right answers (team total) accrue +1, up to ${PTO_ACCRUE_MAX} per run.</p>
+      <p><b>Gear:</b> each player wears one weapon (Mouse or Notebook) and one outfit (Business Professional, Business Casual, Smart Casual). ★ Common gear is stats only. ★★ Rare and ★★★ Epic gear add study perks: no-hint bonuses, retrying missed questions, drilling your weakest chapter, and cross-training. Buy gear at the ${esc(TH().tiles.shop)}, or earn it at the ${esc(TH().tiles.essay)} — a short answer where better answers earn rarer gear.</p>
+      <p><b>Combat:</b> every player gets their own question at the same time. Each correct answer adds that player's attack. Matching your job's topic = ×1.25. All correct (2+ players) = PERFECT ×1.25.</p>
+      <p><b>${esc(TH().tiles.enemy)} fights:</b> short, low-stress practice — ${TRAIN_QS(1)} questions solo, 3–4 each on a team. They need only 40–50% correct, hit softer, and cost no ${esc(lifeWord())} if you miss the deadline. Wins pay a bounty and can drop an item or gear; a clean win (80%+ right) always drops something. Bigger teams face tougher rivals.</p>
+      <p><b>Performance bars:</b> dungeon fights are the real test. The first rooms need about 60% correct; rooms farther in need more; the final boss needs 90%. Miss a dungeon deadline and you lose a ${esc(lifeWord())}; miss the final one and everyone is fired.</p>
+      <p><b>Getting hit:</b> the enemy swings at everyone each round. Miss = full hit. Correct = 50% chance to dodge, otherwise half damage. At 0 HP you burn a ${esc(TH().livesName.replace(/s$/, ""))}; with none left, ${esc(TH().loseText.toLowerCase())}</p>
+      <p><b>The map:</b> drag to explore. Find ${esc(TH().tiles.cache)} items, shop at the ${esc(TH().tiles.shop)}, and hire helpers at the ${esc(TH().tiles.recruit)}. Then clear the ${esc(TH().dungeons[0])}, the ${esc(TH().dungeons[1])}, and finally ${esc(TH().dungeons[2])} — each is a chain of fights.</p>
+      <p><b>${esc(TH().chaosName)}:</b> fills each turn and with wrong answers. When it is full, layoffs hit the whole team.</p>
+    </details>
+  </div>`;
+  const nmEl = document.getElementById("nm");
+  const keepName = () => { UI.name = str(nmEl.value, 16); store.set("name", UI.name); return UI.name || (toast("Type your name first."), nmEl.focus(), ""); };
+  nmEl.oninput = () => { UI.name = nmEl.value.slice(0, 16); store.set("name", UI.name); };
+  const codeEl = document.getElementById("code"); codeEl.oninput = () => UI.joinCode = codeEl.value;
+  bind("#host", () => keepName() && startHost());
+  bind("#local", () => keepName() && startLocal());
+  bind("#join", () => keepName() && startClient(codeEl.value));
+  bind("#joinHash", () => keepName() && startClient(hash));
+  bind("#resume", () => resume());
+  bind("#sendgame", () => shareLink(`Study Quest — ${PACK.meta.title}. ${TH().tagline} Tap to play (works on iPhone): ${SITE_URL}`, SITE_URL, "Game link copied. Paste it into iMessage."));
+}
+function connectingView() {
+  app.innerHTML = `<div class="box center" style="max-width:520px;margin:40px auto">
+    <h2>Joining room ${esc(NET.code)}…</h2>
+    ${UI.err ? `<div class="err">${esc(UI.err)}</div><div class="row" style="justify-content:center"><button class="btn" id="retry">Try again</button><button class="btn" id="back">Back</button></div>` : `<p class="muted">Clocking in…</p><button class="btn" id="back">Cancel</button>`}
+  </div>`;
+  bind("#retry", () => startClient(NET.code)); bind("#back", leaveGame);
+}
+
+function classCard(c, sel, attrs) {
+  return `<button class="ccard${sel ? " sel" : ""}" ${attrs}>${personSVG(c.art, 66)}<div><b>${esc(c.name)}</b></div><div class="sal">${salary(c.salary)}/yr</div>
+    <div class="small">HP ${c.hp} · ATK ${c.atk} · Focus ${c.focus}</div>
+    <div class="small">${c.subject ? `Strong on: ${esc(subjName(c.subject))}` : "No topic bonus"}</div>
+    <div class="small"><b>Perk:</b> ${esc(PERKS[c.perk])}</div>
+    ${c.blurb ? `<div class="hint">${esc(c.blurb)}</div>` : ""}</button>`;
+}
+function lobbyView() {
+  const host = isHostish(), local = NET.mode === "local", n = S.order.length;
+  const who = local ? (S.players[UI.pickFor] ? UI.pickFor : S.order[0]) : ME;
+  const me = S.players[who];
+  const allPicked = n && S.order.every(p => S.players[p].cls);
+  const status = { opening: "Opening the room…", open: "Room is open. Share the link.", reclaiming: "Reopening your room…", error: `Online room failed (${esc(NET.statusMsg || "")}). You can still play solo, or use one device.`, offline: "Online play could not load. You can still play solo." }[NET.status] || "";
+  const recent = store.get("packs", []);
+  app.innerHTML = `
+  <div class="row" style="justify-content:space-between"><h2>Lobby</h2><button class="btn" id="quit">Leave</button></div>
+  ${!local ? `<div class="box">
+    <div class="row" style="justify-content:space-between"><div><div class="small muted">Room code</div><div class="code">${esc(S.code)}</div></div>
+    <div class="row">${navigator.share ? `<button class="btn dark" id="share">Send invite (Messages)</button>` : ""}<button class="btn" id="copy">Copy invite</button></div></div>
+    ${host ? `<div class="hint">${status}</div>` : ""}<div class="hint">Friends open the link (or type the code) and pick a job. Up to ${MAX_PLAYERS} players. Enemies scale to the team size.</div>
+  </div>` : ""}
+  <div class="spacer"></div>
+  <div class="box">
+    <b>Team (${n}/${MAX_PLAYERS})</b>
+    <div class="plist" style="margin-top:6px">${S.order.map(p => { const pl = S.players[p], c = pl.cls && PACK.classes.find(x => x.id === pl.cls);
+      return `<div>${c ? personSVG(c.art, 34) : ""}<b>${esc(pl.name)}</b>${p === ME && !local ? " (you)" : ""} — ${c ? esc(c.name) + " · " + salary(c.salary) : "<span class='muted'>picking a job…</span>"}${pl.conn ? "" : " <span class='tag'>offline</span>"}
+      ${local ? `<button class="item" data-pf="${p}">${p === who ? "▶ picking" : "pick job"}</button>${S.order.length > 1 ? `<button class="item" data-rm="${p}">remove</button>` : ""}` : ""}</div>`; }).join("")}</div>
+    ${local && n < MAX_PLAYERS ? `<div class="row" style="margin-top:8px"><input type="text" id="addnm" maxlength="16" placeholder="Add a player" style="max-width:220px"><button class="btn" id="add">Add</button></div>` : ""}
+  </div>
+  <div class="spacer"></div>
+  ${me ? `<h3>${local ? esc(me.name) + ", pick" : "Pick"} your job</h3>
+  <div class="classes">${PACK.classes.map(c => classCard(c, me.cls === c.id, `data-cls="${esc(c.id)}"`)).join("")}</div>` : ""}
+  <div class="spacer"></div>
+  <div class="box small">
+    <b>Pack:</b> ${esc(PACK.meta.title)} · ${PACK.questions.length} questions · ${Object.values(PACK.meta.subjects).map(esc).join(" · ")}
+    ${host ? `<div class="row" style="margin-top:8px"><label class="btn">Load a pack file<input type="file" id="pf" accept=".json,application/json" hidden></label>
+      ${Object.entries(BUILTIN_PACKS).filter(([id]) => id !== PACK_ID).map(([id, b]) => `<button class="btn" data-bp="${id}">Use: ${esc(b.label)}</button>`).join("")}
+      ${PACK_MAKER_URL ? `<a class="btn" href="${PACK_MAKER_URL}" target="_blank" rel="noopener">Make a pack from your slides</a>` : ""}</div>
+      ${recent.filter(x => x.id !== PACK_ID).length ? `<div style="margin-top:6px">Recent: ${recent.filter(x => x.id !== PACK_ID).map((x, i) => `<button class="item" data-rp="${esc(x.id)}">${esc(x.title)}</button>`).join(" ")}</div>` : ""}
+      ${UI.packMsg ? `<div class="err">${UI.packMsg}</div>` : ""}` : `<div class="hint">The host picks the pack.</div>`}
+  </div>
+  ${UI.err ? `<div class="err">${esc(UI.err)}</div>` : ""}
+  <div class="spacer"></div>
+  ${host ? `<button class="btn dark center" id="start" ${allPicked ? "" : "disabled"}>${allPicked ? `Clock in (${n} player${n > 1 ? "s" : ""})` : "Everyone needs a job first"}</button>` : `<p class="muted center">Waiting for the host to start…</p>`}`;
+  bind("#quit", leaveGame);
+  const invite = `Join my Study Quest room ${S.code} (${PACK.meta.title}). ${TH().tagline} Tap: ${inviteURL()}`;
+  bind("#copy", () => copyText(invite, "Invite copied. Paste it into your iMessage group."));
+  bind("#share", () => shareLink(invite, inviteURL(), "Invite copied. Paste it into your iMessage group."));
+  bind("[data-cls]", el => dispatch({ type: "PICK", pid: who, cls: el.dataset.cls }));
+  bind("[data-pf]", el => { UI.pickFor = el.dataset.pf; render(); });
+  bind("[data-rm]", el => dispatch({ type: "LEAVE", pid: el.dataset.rm }));
+  bind("#add", () => { const v = str(document.getElementById("addnm").value, 16); if (!v) return; const pid = "p" + (++S.pidN); dispatch({ type: "JOIN", pid, name: v }); UI.pickFor = pid; render(); });
+  bind("#start", () => dispatch({ type: "START" }));
+  bind("[data-bp]", el => setPack(BUILTIN_PACKS[el.dataset.bp].raw, el.dataset.bp));
+  bind("[data-rp]", el => { const x = store.get("packs", []).find(p => p.id === el.dataset.rp); if (x) setPack(x.raw, x.id); });
+  const pf = document.getElementById("pf");
+  if (pf) pf.onchange = () => { const f = pf.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => { let raw; try { raw = JSON.parse(rd.result); } catch (e) { UI.packMsg = "That file is not valid JSON."; return render(); } setPack(raw, "custom-" + xmur(String(rd.result))); }; rd.readAsText(f); };
+  const addnm = document.getElementById("addnm"); if (addnm) addnm.onkeydown = e => { if (e.key === "Enter") document.getElementById("add").click(); };
+}
+function setPack(raw, id) {
+  const prev = [PACK_RAW, PACK_ID], v = loadPack(raw, id);
+  if (!v.ok) { UI.packMsg = `<b>That pack has problems:</b><ul>${v.errors.concat(v.warnings).slice(0, 12).map(e => `<li>${esc(e)}</li>`).join("")}</ul>`; loadPack(prev[0], prev[1]); return render(); }
+  UI.packMsg = v.warnings.length ? `<b>Loaded, with notes:</b><ul>${v.warnings.slice(0, 8).map(e => `<li>${esc(e)}</li>`).join("")}</ul>` : "";
+  if (!BUILTIN_PACKS[id]) { const rec = store.get("packs", []).filter(x => x.id !== id); rec.unshift({ id, title: PACK.meta.title, raw }); store.set("packs", rec.slice(0, 5)); }
+  for (const p of S.order) if (!PACK.classes.some(c => c.id === S.players[p].cls)) S.players[p].cls = null;
+  for (const c of NET.conns.values()) if (c.open) sendPack(c);
+  S.v++; changed();
+}
+/* iPhone share sheet (Messages, AirDrop…) when available, else copy. The text already holds the link. */
+function shareLink(text, url, copiedMsg) {
+  if (navigator.share) navigator.share({ title: "Study Quest", text }).catch(e => { if (e && e.name !== "AbortError") copyText(text, copiedMsg); });
+  else copyText(text, copiedMsg);
+}
+function copyText(t, msg) {
+  const done = () => toast(msg);
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(t).then(done, () => fallbackCopy(t, done)); else fallbackCopy(t, done);
+}
+function fallbackCopy(t, done) { const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); done(); } catch (e) { toast("Copy this: " + t); } ta.remove(); }
+
+/* ---------- in-game ---------- */
+function hud() {
+  const m = Math.floor(S.chaos);
+  return `<div class="hud">
+    <span class="chip dark">${esc(TH().goldName)} ${money(S.gold)}</span>
+    <span class="chip">${esc(TH().livesName)}: ${S.lives}</span>
+    <span class="chip" title="Every ${PTO_ACCRUE} right answers (team total) accrue +1 ${esc(lifeWord())}, up to ${PTO_ACCRUE_MAX} per run.">${S.accrued >= PTO_ACCRUE_MAX ? "Accrual maxed" : `Accrual ${S.accrue}/${PTO_ACCRUE}`}</span>
+    <span class="chip">${esc(TH().chaosName)} <span class="meter">${Array.from({ length: 10 }, (_, i) => `<i class="${i < m ? "on" : ""}"></i>`).join("")}</span> ${m}/10</span>
+    <span class="chip">${S.map.dungeons.map((id, d) => (S.map.tiles[id].done ? "✓ " : "") + esc(dname(d))).join(" → ")}</span>
+    ${S.hires.length ? `<span class="chip">Hires: ${S.hires.map(id => esc((hireById(id) || {}).name || "")).join(", ")}</span>` : ""}
+    <span class="chip">Turn ${S.turns + 1}</span>
+    <button class="item" id="quit" style="margin-left:auto">Leave</button>
+  </div>`;
+}
+function partyHTML(view) {
+  return `<div class="party">${S.order.map(p => {
+    const pl = S.players[p], c = clsOf(pl), mine = p === view, isActive = S.phase === "map" && active(S) === p;
+    const canUse = mine && (S.phase !== "combat" || S.combat.step === "answer") && (NET.mode !== "local" || p === view);
+    return `<div class="pcard${mine ? " me" : ""}${pl.conn ? "" : " off"}">
+      <div class="top">${personSVG(c.art, 40, pl.hp <= 0)}<div><b>${esc(pl.name)}</b>${isActive ? " ▶" : ""}<div class="small muted">${esc(c.name)}</div></div></div>
+      <div class="hp"><i style="width:${clamp(pl.hp / pl.max * 100, 0, 100)}%"></i></div><div class="hptxt">${Math.max(0, pl.hp)}/${pl.max} HP</div>
+      <div class="gearrow">${["weapon", "armor"].map(s => { const g = gearOf(pl, s); return g ? `<button class="gchip t${g.tier}" data-ginfo="${g.id}">${"★".repeat(g.tier)} ${esc(g.name)}</button>` : `<span class="gchip none">no ${s}</span>`; }).join("")}</div>
+      <div class="small">Focus <span class="pips">${"◆".repeat(Math.min(pl.focus, 9))}${"◇".repeat(Math.max(0, pl.maxFocus - pl.focus))}</span>${pl.shield ? ` · 🛡${pl.shield}` : ""}${pl.buff ? ` · +${pl.buff}% dmg` : ""}${pl.conn ? "" : " · offline"}</div>
+      ${pl.items.length ? `<div class="bag" style="margin-top:4px">${pl.items.map((id, i) => { const it = PACK.items.find(x => x.id === id); if (!it) return ""; const fightOnly = it.fx.some(f => COMBAT_OPS.includes(f.op)), ok = canUse && (!fightOnly || (S.phase === "combat" && S.combat.step === "answer" && S.combat.ans[p] === undefined));
+        return `<button class="item" ${ok ? `data-use="${i}"` : "disabled"} title="${esc(fxText(it))}">${esc(it.name)}<small>${esc(fxText(it))}</small></button>`; }).join("")}</div>` : ""}
+    </div>`; }).join("")}</div>`;
+}
+function gameView() {
+  const view = viewer();
+  let body = "";
+  if (S.phase === "map") body = mapBody(view);
+  else if (S.phase === "shop") body = shopBody(view);
+  else if (S.phase === "event") body = eventBody(view);
+  else if (S.phase === "combat") body = combatBody(view);
+  app.innerHTML = `${hud()}${UI.lost ? `<div class="err">Lost the connection to the host. Reconnecting… <button class="item" id="reconn">Retry now</button></div>` : ""}${body}${partyHTML(view)}
+    <div class="log">${S.log.slice(-4).map(esc).join("<br>")}</div>`;
+  bind("#quit", () => { if (confirm(NET.mode === "host" ? "Leave and close the room for everyone?" : "Leave this run?")) leaveGame(); });
+  bind("#reconn", () => openConn());
+  bind("[data-use]", el => dispatch({ type: "USE", pid: view, idx: +el.dataset.use }));
+  bind("[data-ginfo]", el => { const g = gearById(el.dataset.ginfo); if (g) toast(`${g.name} (${RARITY[g.tier]} ${g.line}): ${gearText(g)}`); });
+  bindPhase(view);
+  if (S.phase === "map") setupBoard(view);
+  if (UI.anim) { const a = UI.anim; UI.anim = ""; const f = app.querySelector(".foebox svg"); if (f) { f.classList.remove("shake"); void f.offsetWidth; f.classList.add(a); } }
+  tick();
+}
+function bindPhase(view) {
+  bind("#roll", () => dispatch({ type: "ROLL", pid: view }));
+  bind("#endmove", () => dispatch({ type: "END_MOVE", pid: view }));
+  bind("[data-buy]", el => dispatch({ type: "BUY", pid: view, item: el.dataset.buy }));
+  bind("#shopdone", () => dispatch({ type: "SHOP_DONE", pid: view }));
+  bind("[data-o]", el => dispatch({ type: "ANSWER", pid: view, i: +el.dataset.o }));
+  bind("[data-tp]", el => { const i = +el.dataset.tp, k = UI.tPicks.indexOf(i); if (k >= 0) UI.tPicks.splice(k, 1); else UI.tPicks.push(i); render(); });
+  bind("#tsubmit", () => { if (!UI.tPicks.length) return toast("Select at least one choice."); dispatch({ type: "ANSWER", pid: view, picks: UI.tPicks.slice() }); });
+  bind("#evdone", () => dispatch({ type: "EVENT_DONE", pid: S.event ? S.event.pid : view }));
+  bind("#fifty", () => dispatch({ type: "LIFELINE", pid: view, kind: "fifty" }));
+  bind("#time", () => dispatch({ type: "LIFELINE", pid: view, kind: "time" }));
+  bind("#talkend", () => dispatch({ type: "TALK_END" }));
+  bind("#next", () => dispatch({ type: "NEXT", pid: view, round: S.combat && S.combat.round }));
+  bind("#show", () => { UI.shownFor = view; render(); });
+  bind("[data-gear]", el => dispatch({ type: "PICK_GEAR", pid: view, i: +el.dataset.gear }));
+  const ta = document.getElementById("satext"); if (ta) ta.oninput = () => { UI.saDraft = ta.value; };
+  bind("#sasubmit", () => { const v = (document.getElementById("satext") || {}).value || "";
+    if (v.trim().split(/\s+/).length < 5) return toast("Write a few sentences first.");
+    UI.saDraft = ""; dispatch({ type: "ANSWER", pid: view, text: v }); });
+}
+
+/* ---------- map (drag to pan, +/− to zoom, fog until explored) ---------- */
+const HS = 30, SQ3 = Math.sqrt(3);
+let VIEW_W = 560; // map units across the board at zoom 1 (smaller on phones = bigger rooms)
+function hexXY(t) { return [HS * SQ3 * (t.q + t.r / 2), HS * 1.5 * t.r]; }
+function hexPts(x, y) { let s = ""; for (let i = 0; i < 6; i++) { const a = Math.PI / 180 * (60 * i - 30); s += (x + (HS - 1.5) * Math.cos(a)).toFixed(1) + "," + (y + (HS - 1.5) * Math.sin(a)).toFixed(1) + " "; } return s; }
+const ICON = {
+  start: (x, y) => `<path d="M${x - 8} ${y + 10} L${x - 8} ${y - 10} L${x + 8} ${y - 10} L${x + 8} ${y + 10}" fill="none"/><circle cx="${x + 4}" cy="${y + 1}" r="1.6" fill="#111"/>`,
+  shop: (x, y) => `<rect x="${x - 10}" y="${y - 8}" width="20" height="16"/><path d="M${x - 10} ${y - 8} L${x + 10} ${y + 8} M${x + 10} ${y - 8} L${x - 10} ${y + 8}" fill="none" stroke-width="1.6"/>`,
+  rest: (x, y) => `<rect x="${x - 7}" y="${y - 4}" width="12" height="13" rx="2"/><path d="M${x + 5} ${y - 1} Q${x + 11} ${y + 2} ${x + 5} ${y + 6} M${x - 3} ${y - 7} Q${x - 1} ${y - 10} ${x - 3} ${y - 13} M${x + 1} ${y - 7} Q${x + 3} ${y - 10} ${x + 1} ${y - 13}" fill="none" stroke-width="1.8"/>`,
+  review: (x, y) => `<rect x="${x - 8}" y="${y - 11}" width="16" height="21" rx="2"/><path d="M${x - 4} ${y} L${x - 1} ${y + 4} L${x + 5} ${y - 5}" fill="none"/>`,
+  chest: (x, y) => `<rect x="${x - 9}" y="${y - 12}" width="18" height="23" rx="1.5"/><path d="M${x - 9} ${y - 1} L${x + 9} ${y - 1} M${x - 3} ${y - 7} L${x + 3} ${y - 7} M${x - 3} ${y + 5} L${x + 3} ${y + 5}" fill="none" stroke-width="1.8"/><circle cx="${x + 5}" cy="${y - 4}" r="2.4" fill="#111"/>`,
+  cache: (x, y) => `<path d="M${x - 10} ${y - 3} L${x + 10} ${y - 3} L${x + 8} ${y + 10} L${x - 8} ${y + 10} Z M${x - 11} ${y - 7} L${x + 11} ${y - 7} L${x + 10} ${y - 3} L${x - 10} ${y - 3} Z"/><text x="${x}" y="${y + 8}" text-anchor="middle" font-size="11" font-weight="bold" fill="#111" stroke="none">?</text>`,
+  recruit: (x, y) => `<circle cx="${x - 3}" cy="${y - 7}" r="5"/><path d="M${x - 3} ${y - 2} L${x - 3} ${y + 7} M${x - 9} ${y + 1} L${x + 3} ${y + 1} M${x - 3} ${y + 7} L${x - 7} ${y + 13} M${x - 3} ${y + 7} L${x + 1} ${y + 13} M${x + 7} ${y - 6} L${x + 7} ${y + 2} M${x + 3} ${y - 2} L${x + 11} ${y - 2}" fill="none"/>`,
+  work: (x, y) => `<rect x="${x - 11}" y="${y - 9}" width="17" height="12" rx="1.5"/><path d="M${x - 14} ${y + 6} L${x + 9} ${y + 6} M${x - 3} ${y + 3} L${x - 3} ${y + 6}" fill="none"/><path d="M${x + 10} ${y - 2} q3 1 3 4 q0 4 -3 4 L${x + 10} ${y - 2}"/>`,
+  essay: (x, y) => `<rect x="${x - 9}" y="${y - 11}" width="15" height="20" rx="1.5"/><path d="M${x - 6} ${y - 6} h9 M${x - 6} ${y - 2} h9 M${x - 6} ${y + 2} h5" fill="none" stroke-width="1.6"/><path d="M${x + 4} ${y + 9} L${x + 12} ${y - 5} L${x + 15} ${y - 3} L${x + 7} ${y + 11} Z" stroke-width="1.6"/>`,
+  tutor: (x, y) => `<circle cx="${x - 6}" cy="${y - 5}" r="4"/><circle cx="${x + 6}" cy="${y - 5}" r="4"/><path d="M${x - 12} ${y + 9} Q${x - 6} ${y - 1} ${x} ${y + 9} M${x} ${y + 9} Q${x + 6} ${y - 1} ${x + 12} ${y + 9}" fill="none"/>`,
+  hall: (x, y) => `<circle cx="${x}" cy="${y}" r="1.6" fill="#111"/>`
+};
+/* dungeon buildings: Subsidiary, Manufacturing Plant, Corporate HQ */
+const BLDG = [
+  (x, y) => `<rect x="${x - 12}" y="${y - 8}" width="24" height="18"/><path d="M${x - 5} ${y + 10} L${x - 5} ${y + 3} L${x + 1} ${y + 3} L${x + 1} ${y + 10} M${x + 6} ${y - 8} L${x + 6} ${y - 20} L${x + 14} ${y - 17} L${x + 6} ${y - 14}" fill="none"/><path d="M${x - 9} ${y - 4} h4 M${x + 5} ${y - 4} h4 M${x + 5} ${y + 2} h4" stroke-width="2"/>`,
+  (x, y) => `<path d="M${x - 15} ${y + 11} L${x - 15} ${y - 2} L${x - 7} ${y - 8} L${x - 7} ${y - 2} L${x + 1} ${y - 8} L${x + 1} ${y - 2} L${x + 15} ${y - 2} L${x + 15} ${y + 11} Z"/><rect x="${x + 7}" y="${y - 18}" width="5" height="16"/><path d="M${x + 9} ${y - 21} q4 -4 0 -7" fill="none" stroke-width="1.8"/><path d="M${x - 11} ${y + 4} h4 M${x - 3} ${y + 4} h4 M${x + 5} ${y + 4} h4" stroke-width="2"/>`,
+  (x, y) => `<rect x="${x - 8}" y="${y - 22}" width="16" height="33"/><rect x="${x - 14}" y="${y - 6}" width="6" height="17"/><rect x="${x + 8}" y="${y - 10}" width="6" height="21"/><path d="M${x - 4} ${y - 17} h3 M${x + 2} ${y - 17} h3 M${x - 4} ${y - 11} h3 M${x + 2} ${y - 11} h3 M${x - 4} ${y - 5} h3 M${x + 2} ${y - 5} h3 M${x - 4} ${y + 1} h3 M${x + 2} ${y + 1} h3" stroke-width="2"/><path d="M${x} ${y - 22} L${x} ${y - 29}" fill="none"/>`
+];
+const LOCK = (x, y) => `<rect x="${x + 6}" y="${y + 4}" width="11" height="9" rx="1.5" fill="#111"/><path d="M${x + 8} ${y + 4} L${x + 8} ${y + 1} Q${x + 11.5} ${y - 4} ${x + 15} ${y + 1} L${x + 15} ${y + 4}" fill="none" stroke-width="2"/>`;
+function boardSVG(view) {
+  const T = S.map.tiles, ids = Object.keys(T), canMove = S.phase === "map" && active(S) === view && S.roll && S.moves > 0 && !UI.lost;
+  let hexes = "", icons = "", labels = "";
+  for (const id of ids) {
+    const t = T[id], [x, y] = hexXY(t), seen = S.seen[id], can = canMove && adj(S.pos, id);
+    const fill = !seen ? "#e4e3dc" : t.done && t.type !== "start" && t.type !== "hall" ? "url(#hatch)" : "#fff";
+    hexes += `<g class="hex${can ? " can" : ""}" data-hex="${id}"><polygon points="${hexPts(x, y)}" fill="${fill}"${seen ? "" : ` stroke-dasharray="3 5"`}/></g>`;
+    if (!seen) continue;
+    if (t.type === "dungeon") {
+      icons += BLDG[t.d](x, y);
+      if (dungeonLocked(S, t)) icons += LOCK(x, y);
+      else if (t.done) icons += `<path d="M${x + 4} ${y + 8} L${x + 9} ${y + 13} L${x + 18} ${y + 2}" fill="none" stroke-width="3.5"/>`;
+      labels += `<text x="${x}" y="${y + HS + 9}" text-anchor="middle" font-size="10" font-weight="bold" fill="#111" stroke="#fbfaf5" stroke-width="3" paint-order="stroke">${esc(dname(t.d))}${t.done ? "" : ` · ${Math.round(t.rooms[t.progress].bar * 100)}%`}</text>`;
+    } else if (t.type === "enemy") {
+      if (!t.done) { const e = enemyById(t.enemy); icons += `<g transform="translate(${x - 15},${y - 19}) scale(.3)" stroke-width="7">${drawParts(e.art.heads ? { ...e.art, ...e.art.heads[1] } : e.art, false)}</g>`;
+        labels += `<text x="${x}" y="${y + HS - 6}" text-anchor="middle" font-size="10" fill="#111">${Math.round(t.bar * 100)}%</text>`; }
+      else icons += `<path d="M${x - 8} ${y} L${x - 2} ${y + 7} L${x + 9} ${y - 8}" fill="none" stroke-width="3.5"/>`;
+    } else icons += (ICON[t.type] || ICON.hall)(x, y);
+  }
+  const [px, py] = hexXY(T[S.pos]);
+  // one doodle per player, fanned across the room, each with a name tag; the active player's tag is filled
+  const n = S.order.length, act = S.phase === "map" ? active(S) : null, spread = Math.min(34, 9 * n);
+  let party = "";
+  S.order.forEach((p, i) => {
+    const fx = n === 1 ? px : px - spread / 2 + spread * i / (n - 1), fy = py - 2 + (i % 2) * 5;
+    party += `<g transform="translate(${(fx - 6).toFixed(1)},${fy - 4}) scale(.22)">${personBody()}</g>`;
+  });
+  S.hires.forEach((h, i) => { party += `<g transform="translate(${px - 4 + i * 8},${py + 14}) scale(.14)">${personBody()}</g>`; });
+  const tagH = 13, tags = S.order.map(p => ({ p, name: nm(S, p).slice(0, 10) })), rows = [];
+  tags.forEach((g, i) => { (rows[i >> 1] = rows[i >> 1] || []).push(g); });
+  rows.forEach((row, ri) => {
+    const widths = row.map(g => g.name.length * 6.2 + 12), total = widths.reduce((a, b) => a + b, 0) + 4 * (row.length - 1);
+    let x0 = px - total / 2; const y0 = py - HS - 4 - (rows.length - ri) * (tagH + 3);
+    row.forEach((g, k) => { const on = g.p === act, me = g.p === ME && NET.mode !== "local";
+      labels += `<g><rect x="${x0.toFixed(1)}" y="${y0}" width="${widths[k].toFixed(1)}" height="${tagH}" rx="6" fill="${on ? "#111" : "#fff"}" stroke="#111" stroke-width="${me ? 2.2 : 1.4}"/><text x="${(x0 + widths[k] / 2).toFixed(1)}" y="${y0 + 9.6}" text-anchor="middle" font-size="9.5" font-weight="${on || me ? "bold" : "normal"}" fill="${on ? "#fff" : "#111"}">${on ? "▶ " : ""}${esc(g.name)}</text></g>`;
+      x0 += widths[k] + 4; });
+  });
+  return `<svg id="board" role="img" aria-label="Office map"><g filter="url(#wob)" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="#fff">${hexes}<g pointer-events="none">${icons}${party}</g></g><g pointer-events="none" font-family="inherit">${labels}</g></svg>`;
+}
+function personBody() { return `<circle cx="30" cy="18" r="10" stroke-width="5"/><path d="M30 28 L30 58 M30 36 L16 48 M30 36 L46 30 M30 58 L20 82 M30 58 L40 82" fill="none" stroke-width="6"/>`; }
+/* camera: centre (x, y) in map units and zoom z; it follows the team when they move */
+function setupBoard(view) {
+  const svg = document.getElementById("board"); if (!svg) return;
+  const T = S.map.tiles;
+  if (!UI.cam || UI.camSeed !== S.seed) UI.cam = { x: 0, y: 0, z: 1 };
+  if (UI.followPos !== S.pos || UI.camSeed !== S.seed) { const [x, y] = hexXY(T[S.pos]); UI.cam.x = x; UI.cam.y = y; UI.followPos = S.pos; UI.camSeed = S.seed; }
+  let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
+  for (const id in T) { const [x, y] = hexXY(T[id]); minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y); }
+  VIEW_W = clamp(svg.clientWidth || 560, 330, 560);
+  const apply = () => {
+    const w = svg.clientWidth || 600, h = svg.clientHeight || 400, VW = VIEW_W / UI.cam.z, VH = VW * h / w;
+    const fit = (c, lo, hi, span) => hi - lo + 2 * HS <= span ? (lo + hi) / 2 : clamp(c, lo - HS + span / 2, hi + HS - span / 2);
+    UI.cam.x = fit(UI.cam.x, minX, maxX, VW); UI.cam.y = fit(UI.cam.y, minY, maxY, VH);
+    svg.setAttribute("viewBox", `${(UI.cam.x - VW / 2).toFixed(1)} ${(UI.cam.y - VH / 2).toFixed(1)} ${VW.toFixed(1)} ${VH.toFixed(1)}`);
+  };
+  apply();
+  let drag = null;
+  svg.onpointerdown = e => { drag = { x: e.clientX, y: e.clientY, cx: UI.cam.x, cy: UI.cam.y, moved: false }; try { svg.setPointerCapture(e.pointerId); } catch (er) {} };
+  svg.onpointermove = e => {
+    if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (Math.abs(dx) + Math.abs(dy) > 7) drag.moved = true; if (!drag.moved) return;
+    const k = VIEW_W / UI.cam.z / (svg.clientWidth || 600); UI.cam.x = drag.cx - dx * k; UI.cam.y = drag.cy - dy * k; apply();
+  };
+  svg.onpointerup = e => {
+    const d = drag; drag = null; if (!d || d.moved) return;
+    const el = document.elementFromPoint(e.clientX, e.clientY), hx = el && el.closest && el.closest("[data-hex]");
+    if (hx && hx.classList.contains("can")) dispatch({ type: "MOVE", pid: view, to: hx.dataset.hex });
+    else if (hx && S.phase === "map") { const t = S.map.tiles[hx.dataset.hex]; if (t && S.seen[t.id]) toast(tileInfo(t)); }
+  };
+  svg.onpointercancel = () => { drag = null; };
+  svg.onwheel = e => { e.preventDefault(); UI.cam.z = clamp(UI.cam.z * (e.deltaY < 0 ? 1.15 : 1 / 1.15), 0.45, 2.2); apply(); };
+  bind("#zin", () => { UI.cam.z = clamp(UI.cam.z * 1.25, 0.45, 2.2); apply(); });
+  bind("#zout", () => { UI.cam.z = clamp(UI.cam.z / 1.25, 0.45, 2.2); apply(); });
+  bind("#zfind", () => { const [x, y] = hexXY(T[S.pos]); UI.cam.x = x; UI.cam.y = y; apply(); });
+}
+function tileInfo(t) {
+  const T = TH().tiles;
+  if (t.type === "dungeon") return t.done ? `${dname(t.d)}: cleared.` : `${dname(t.d)}: ${t.rooms.length} fights in a row, bars ${t.rooms.map(r => Math.round(r.bar * 100) + "%").join(" → ")}${dungeonLocked(S, t) ? `. Locked until the ${dname(t.d - 1)} is cleared` : ""}.`;
+  if (t.type === "enemy") return t.done ? `${T.enemy}: cleared.` : `${T.enemy}: ${enemyById(t.enemy).name}, bar ${Math.round(t.bar * 100)}%.`;
+  return (T[t.type] || T.hall) + (t.done ? " (used)" : "") + ".";
+}
+function mapBody(view) {
+  const p = active(S), mine = p === view && !UI.lost, T = TH().tiles, here = S.map.tiles[S.pos];
+  let panel = `<h3 style="margin-top:0">${mine ? (NET.mode === "local" ? esc(nm(S, p)) + ", your move" : "Your move") : esc(nm(S, p)) + "'s move"}</h3>`;
+  if (!S.roll) panel += mine ? `<p class="small">Roll ${2 + (clsOf(S.players[p]).perk === "move" ? 1 : 0)} slots. Each hit = +1 step (you always get 1).</p><button class="btn dark" id="roll">Roll for moves</button>` : `<p class="muted">Waiting for ${esc(nm(S, p))} to roll…</p>`;
+  else panel += `<div class="slots">${S.roll.map(ok => `<div class="slot spin ${ok ? "ok" : ""}">${ok ? "✓" : "✗"}</div>`).join("")}</div>
+    <p><b>${S.moves}</b> step${S.moves === 1 ? "" : "s"} left. ${mine ? "Tap a room with a dashed edge. Drag the map to look around." : ""}</p>${mine ? `<button class="btn" id="endmove">End turn here</button>` : ""}`;
+  if (S.note) panel += `<div class="err small">${esc(S.note)}</div>`;
+  panel += `<div class="small" style="margin-top:10px"><b>Goal:</b> ${S.map.dungeons.map((id, d) => { const t = S.map.tiles[id]; return `${t.done ? "✓ " : ""}${esc(dname(d))}${t.done ? "" : ` (${t.rooms.map(r => Math.round(r.bar * 100) + "%").join("→")})`}`; }).join(" → ")}</div>
+    <div class="legend"><span>${miniIcon("enemy")} ${esc(T.enemy)}</span><span>${miniIcon("cache")} ${esc(T.cache)}</span><span>${miniIcon("recruit")} ${esc(T.recruit)}</span><span>${miniIcon("shop")} ${esc(T.shop)}</span><span>${miniIcon("rest")} ${esc(T.rest)}</span><span>${miniIcon("review")} ${esc(T.review)}</span><span>${miniIcon("chest")} ${esc(T.chest)}</span><span>${miniIcon("work")} ${esc(T.work)}</span><span>${miniIcon("essay")} ${esc(T.essay)}</span><span>${miniIcon("tutor")} ${esc(T.tutor)}</span></div>
+    <p class="hint">You are at: ${esc(here.type === "dungeon" ? dname(here.d) : T[here.type] || T.hall)}. Tap any room you have seen for details.</p>`;
+  return `<div class="layout"><div class="box board">${boardSVG(view)}<div class="zoom"><button class="item" id="zin" aria-label="Zoom in">＋</button><button class="item" id="zout" aria-label="Zoom out">−</button><button class="item" id="zfind">Find team</button></div></div><div class="box">${panel}</div></div>`;
+}
+function miniIcon(type) {
+  const inner = type === "enemy" ? `<circle cx="12" cy="13" r="8"/><circle cx="9.5" cy="12" r="1.3" fill="#111"/><circle cx="14.5" cy="12" r="1.3" fill="#111"/>` : (ICON[type])(12, 12);
+  return `<svg viewBox="0 0 24 24" width="20" height="20" overflow="visible"><g stroke="#111" stroke-width="2" fill="#fff" transform="translate(12 12) scale(.8) translate(-12 -12)">${inner}</g></svg>`;
+}
+
+/* ---------- shop & events ---------- */
+function shopBody(view) {
+  const me = S.players[view], mine = active(S) === view, hires = S.shop.kind === "hires", T = TH().tiles;
+  const full = hires && S.hires.length >= MAX_HIRES;
+  return `<div class="box"><h3 style="margin-top:0">${esc(hires ? T.recruit : T.shop)}</h3>
+    <p class="small">${hires ? `Hire a helper with the team's ${esc(TH().goldName)} (${money(S.gold)}). Hires follow the team and help in every fight. Team max: ${MAX_HIRES}.` : `Spend the team's ${esc(TH().goldName)} (${money(S.gold)}). Items go in the buyer's bag (4 max).`}</p>
+    ${full ? `<p><b>The team already has ${MAX_HIRES} hires.</b></p>` : ""}
+    <div class="bag">${S.shop.stock.map(id => {
+      const it = hires ? hireById(id) : PACK.items.find(x => x.id === id); if (!it) return "";
+      const can = me && S.gold >= it.cost && !UI.lost && (hires ? !full : me.items.length < 4);
+      return `<button class="item" ${can ? `data-buy="${esc(id)}"` : "disabled"}>${hires ? personSVG(it.art, 40) : ""}<b>${esc(it.name)}</b> · ${money(it.cost)}<small>${esc(hires ? hireText(it) : fxText(it))}</small></button>`; }).join("") || "<span class='muted'>Nothing left here.</span>"}</div>
+    ${!hires && S.shop.gear ? `<h4 style="margin:12px 0 4px">Equipment <span class="small muted">(equips on the buyer; the old piece is traded in. ${S.dcleared >= 1 ? "" : "Rare gear arrives after the first dungeon. "}Epic gear only comes from the ${esc(T.essay)}.)</span></h4>
+    <div class="bag">${S.shop.gear.map(id => { const g = gearById(id), cur = me && gearOf(me, g.slot), can = me && S.gold >= g.cost && !UI.lost && !(cur && cur.id === g.id);
+      return `<button class="item gearbtn t${g.tier}" ${can ? `data-buy="${esc(id)}"` : "disabled"}><b>${esc(g.name)}</b> · ${money(g.cost)}<small>${gearTag(g)} ${esc(g.line)} ${g.slot} · ${esc(gearText(g))}${cur ? ` Replaces your ${esc(cur.name)}.` : ""}</small></button>`; }).join("") || "<span class='muted'>Sold out.</span>"}</div>` : ""}
+    <div class="spacer"></div>
+    ${mine ? `<button class="btn dark" id="shopdone">Back to work</button>` : `<p class="muted">${esc(nm(S, active(S)))} leaves when the team is done.</p>`}</div>`;
+}
+/* Mini calculator: drawn inside an OPEN question that needs number crunching, so it is gone as soon as the question is answered or closed. */
+const NUM_RE = /\d[\d,]*(?:\.\d+)?/g, CALC_HINT = /[$%×÷]|percent|rate|ratio|total|average|cost|salary|pay\b|budget|wage|spread|midpoint|compa|how much|how many/i;
+const needsCalc = q => !!q && !q.hidden && (q.calc === true || ((String(q.q).match(NUM_RE) || []).length >= 2 && CALC_HINT.test(q.q)) ||
+  (Array.isArray(q.tbl) && q.tbl.flat().filter(x => /^[$€£]?\s?\d[\d,]*(\.\d+)?\s?%?$/.test(String(x).trim())).length >= 3));
+/* Safe evaluator (no eval): + − × ÷, parentheses, % (divide by 100), decimals, unary minus. NaN on bad input. */
+function calcEval(src) {
+  const t = String(src).replace(/,/g, "").match(/\d*\.?\d+|[-+×÷*/()%−]/g) || []; let i = 0;
+  const peek = () => t[i], take = () => t[i++];
+  const prim = () => { const k = take(); if (k === "(") { const v = expr(); if (take() !== ")") return NaN; return v; } if (k === "-" || k === "−") return -fact(); return k != null && /\d/.test(k) ? parseFloat(k) : NaN; };
+  const fact = () => { let v = prim(); while (peek() === "%") { take(); v /= 100; } return v; };
+  const term = () => { let v = fact(); while (["×", "÷", "*", "/"].includes(peek())) { const o = take(), w = fact(); v = o === "×" || o === "*" ? v * w : v / w; } return v; };
+  function expr() { let v = term(); while (peek() === "+" || peek() === "-" || peek() === "−") { const o = take(), w = term(); v = o === "+" ? v + w : v - w; } return v; }
+  if (!t.length) return NaN; const v = expr(); return i === t.length && isFinite(v) ? v : NaN;
+}
+const calcFmt = v => isNaN(v) ? "" : (Math.round(v * 1e8) / 1e8).toLocaleString("en-US", { maximumFractionDigits: 8 });
+function calcHTML(q) {
+  const key = String(q.id) + "|" + String(q.q).length; if (UI.calcKey !== key) { UI.calcKey = key; UI.calcExpr = ""; }
+  const keys = ["C", "⌫", "(", ")", "7", "8", "9", "÷", "4", "5", "6", "×", "1", "2", "3", "−", "0", ".", "%", "+"];
+  return `<div class="calc" id="calcbox"><div class="ct">🧮 Scratch calculator</div><div class="cd"><div class="ce" id="cexpr">${esc(UI.calcExpr)}</div><div class="co" id="cout">${esc(calcFmt(calcEval(UI.calcExpr)))}</div></div>
+    <div class="ck">${keys.map(k => `<button type="button" class="${/[÷×−+]/.test(k) ? "op" : ""}" data-ck="${k}">${k}</button>`).join("")}<button type="button" class="eq" data-ck="=" style="grid-column:span 4">=</button></div></div>`;
+}
+function calcPress(k) {
+  let x = UI.calcExpr || "";
+  if (k === "C") x = ""; else if (k === "⌫") x = x.slice(0, -1);
+  else if (k === "=") { const v = calcEval(x); x = isNaN(v) ? x : String(Math.round(v * 1e8) / 1e8); }
+  else if (x.length < 40) x += k;
+  UI.calcExpr = x;
+  const e = document.getElementById("cexpr"), o = document.getElementById("cout");
+  if (e) e.textContent = x; if (o) o.textContent = calcFmt(calcEval(x));
+}
+function questionHTML(q, pickIdx, revealAns, elim, clickable) {
+  return `${q.tbl ? tableHTML(q.tbl) : ""}<div class="q">${esc(q.q)}</div>
+    <div class="opts">${q.opts.map((o, i) => {
+      let cls = "btn";
+      if (revealAns != null) { if (i === revealAns) cls += " right"; else if (i === pickIdx) cls += " wrong"; }
+      else if (elim && elim.includes(i)) cls += " gone";
+      return `<button class="${cls}" ${clickable ? `data-o="${i}"` : "disabled"}><span class="k">${i + 1}.</span> ${esc(o)}</button>`; }).join("")}</div>${clickable && needsCalc(q) ? calcHTML(q) : ""}`;
+}
+function eventBody(view) {
+  const E = S.event, T = TH().tiles;
+  if (E.kind === "cache") { const it = PACK.items.find(x => x.id === E.item);
+    return `<div class="box"><h3 style="margin-top:0">${esc(T.cache)}</h3><p>${esc(nm(S, E.pid))} found <b>${esc(it ? it.name : "something")}</b>${it ? ` — ${esc(fxText(it))}` : ""}.${E.full ? ` Their bag was full, so the team sold it for ${money(20)}.` : ""}</p>
+    ${view === E.pid || NET.mode === "local" ? `<button class="btn dark" id="evdone">Back to work</button>` : `<p class="muted">Waiting for ${esc(nm(S, E.pid))}…</p>`}</div>`; }
+  if (E.kind === "rest") return `<div class="box"><h3 style="margin-top:0">${esc(T.rest)}</h3><p>Everyone heals 40% and refills focus. Someone left donuts.</p>
+    ${view === E.pid || NET.mode === "local" ? `<button class="btn dark" id="evdone">Back to work</button>` : `<p class="muted">Waiting for ${esc(nm(S, E.pid))}…</p>`}</div>`;
+  if (E.kind === "work" || E.kind === "drill") return shiftBody(view);
+  if (E.kind === "essay") return essayBody(view);
+  if (E.kind === "tutor") return tutorBody(view);
+  const mine = E.pid === view && !UI.lost, lock = E.kind === "lock";
+  const rw = E.reward ? PACK.items.find(x => x.id === E.reward.item) : null;
+  const rwText = rw ? ` <b>${esc(nm(S, E.pid))} gets ${esc(rw.name)}${E.reward.sold ? ` (bag full, sold for ${money(20)})` : ""}.</b>` : "";
+  let h = lock
+    ? `<div class="box"><h3 style="margin-top:0">${esc(T.chest)}: ${esc(nm(S, E.pid))} picks the lock</h3><p class="small">${needsCalc(E.q) ? "A numbers question — use the calculator." : "A tricky applied question."} Right = a rare item + ${money(15)}. Wrong = the alarm goes off (−10 HP) and it stays locked.</p>`
+    : `<div class="box"><h3 style="margin-top:0">${esc(T.review)}: ${esc(nm(S, E.pid))}</h3><p class="small">One question, alone. Right = an item, +${money(15)}, and +1 focus for everyone. Wrong = −12 HP and the ${esc(TH().chaosName)} goes up.</p>`;
+  if (!E.done) h += mine ? questionHTML(E.q, null, null, null, true) : `<p class="muted">${esc(nm(S, E.pid))} is ${lock ? "working the lock" : "in a closed-door review"}…</p>`;
+  else {
+    h += questionHTML(E.q, E.pick, E.q.ans, null, false);
+    h += `<div class="fb"><b>${lock ? (E.ok ? "Click. It opens. ✓" : "Alarm! ✗") : E.ok ? "Meets expectations. ✓" : "Needs improvement. ✗"}</b>${rwText} ${esc(E.q.e || "")}${E.rec && E.rec.pto ? ` <b>${esc(nm(S, E.pid))} used a ${esc(TH().livesName.replace(/s$/, ""))}.</b>` : ""}</div>
+      <div class="spacer"></div>${mine || NET.mode === "local" ? `<button class="btn dark" id="evdone">Continue</button>` : ""}`;
+  }
+  return h + `</div>`;
+}
+
+function doneBtn(view) { const E = S.event; return E.pid === view || NET.mode === "local" ? `<button class="btn dark" id="evdone">${E.offer && !E.took ? "Skip — keep my gear" : "Back to work"}</button>` : `<p class="muted">Waiting for ${esc(nm(S, E.pid))}…</p>`; }
+function gearPickHTML(view) {
+  const E = S.event, me = S.players[E.pid], mine = E.pid === view || NET.mode === "local";
+  if (!E.tier) return `<p><b>No gear this time.</b> Read the model answer and try the next one.</p>`;
+  if (E.took) { const g = gearById(E.took); return `<p><b>${esc(nm(S, E.pid))} equipped ${esc(g.name)}</b> (${gearTag(g)}).</p>`; }
+  return `<p><b>Rarity earned: ${"★".repeat(E.tier)} ${RARITY[E.tier]}.</b> ${mine ? "Pick one:" : `${esc(nm(S, E.pid))} is picking…`}</p>
+    <div class="bag">${E.offer.map((id, i) => { const g = gearById(id), cur = gearOf(me, g.slot);
+      return `<button class="item gearbtn t${g.tier}" ${mine && !UI.lost ? `data-gear="${i}"` : "disabled"}><b>${esc(g.name)}</b><small>${esc(g.line)} ${g.slot} · ${esc(gearText(g))}${cur ? ` Replaces ${esc(cur.name)}.` : ""}</small></button>`; }).join("")}</div>`;
+}
+function shiftBody(view) {
+  const E = S.event, T = TH().tiles, mine = E.pid === view && !UI.lost, work = E.kind === "work", n = E.qs.length;
+  let h = `<div class="box"><h3 style="margin-top:0">${esc(work ? T.work : T.essay)}: ${esc(nm(S, E.pid))}</h3>
+    <p class="small">${work ? `A ${n}-question shift. ${money(WORK_PAY)} per right answer, +${money(WORK_PERFECT)} for a perfect shift. Wrong answers nudge the ${esc(TH().chaosName)} up.` : `A ${n}-question skills test on hard questions. Each right answer raises the rarity of the gear you earn.`}</p>`;
+  for (let j = 0; j < E.i; j++) { const q = E.qs[j]; if (!q || q.hidden || q.ans == null) continue;
+    h += `<details class="fb" ${j === E.i - 1 ? "open" : ""}><summary>Q${j + 1}: ${E.picks[j] === q.ans ? "✓ right" : "✗ missed"} — ${esc(subjName(q.c))}</summary>${questionHTML(q, E.picks[j], q.ans, null, false)}${q.e ? `<p class="small">${esc(q.e)}</p>` : ""}</details>`; }
+  if (!E.done) h += mine ? `<p><b>Question ${E.i + 1} of ${n}</b></p>${questionHTML(E.qs[E.i], null, null, null, true)}` : `<p class="muted">${esc(nm(S, E.pid))} is on question ${E.i + 1} of ${n}…</p>`;
+  else h += `<div class="banner"><b>${E.oks}/${n} right.</b> ${work ? `+${money(E.pay)} ${esc(TH().goldName)}.` : ""}</div>${work ? "" : gearPickHTML(view)}<div class="spacer"></div>${doneBtn(view)}`;
+  return h + `</div>`;
+}
+function essayBody(view) {
+  const E = S.event, T = TH().tiles, mine = E.pid === view && !UI.lost;
+  let h = `<div class="box"><h3 style="margin-top:0">${esc(T.essay)}: ${esc(nm(S, E.pid))}</h3>
+    <p class="small">Short answer, scored on key points from the slides. <b>70%+ = ${"★".repeat(3)} Epic gear, 40%+ = ★★ Rare, any key point = ★ Common.</b> Use the exact terms, and explain or give an example.</p>
+    <div class="tag">${esc(subjName(E.c))}</div><div class="q">${esc(E.q)}</div>`;
+  if (!E.done) {
+    h += mine ? `<textarea id="satext" placeholder="Write 3–6 sentences. Name the concepts, then apply them.">${esc(UI.saDraft || "")}</textarea><div class="spacer"></div><button class="btn dark" id="sasubmit">Submit answer</button>`
+      : `<p class="muted">${esc(nm(S, E.pid))} is writing… Think about how you would answer.</p>`;
+  } else {
+    h += `<div class="fb"><b>${esc(nm(S, E.pid))}'s answer (${E.words} words):</b><p class="small" style="white-space:pre-wrap">${esc(E.text || "")}</p>
+      <b>Score: ${E.score}%</b><ul class="small">${(E.items || []).map(x => `<li>${x.ok >= x.p ? "✓" : x.ok > 0 ? "◐" : "✗"} ${esc(x.l)} (${x.ok}/${x.p})</li>`).join("")}</ul>${E.words < 12 ? `<p class="small">Under 12 words caps the score at 35%.</p>` : ""}
+      <b>Model answer:</b><p class="small">${esc(E.model || "")}</p></div>${gearPickHTML(view)}<div class="spacer"></div>${doneBtn(view)}`;
+  }
+  return h + `</div>`;
+}
+
+function tutorBody(view) {
+  const E = S.event, T = tutorOf(E), mine = E.pid === view && !UI.lost, key = "t" + E.ti + S.rn;
+  if (UI.tKey !== key) { UI.tKey = key; UI.tPicks = []; }
+  let h = `<div class="box"><h3 style="margin-top:0">${esc(TH().tiles.tutor)}: ${esc(nm(S, E.pid))}</h3>
+    <p class="small">A coaching session for short-answer topics. <b>Select all that apply.</b> Afterward you see why each choice is right or wrong. All right = ${money(TUTOR_PAY)} + 1 focus; most right = ${money(TUTOR_PART)}.</p>
+    <div class="tag">${esc(subjName(T.c))}</div><div class="q">${esc(T.q)}</div>`;
+  if (!E.done) {
+    if (mine) h += `<div class="opts">${T.opts.map((o, i) => `<button class="btn${UI.tPicks.includes(i) ? " on" : ""}" data-tp="${i}"><span class="k">${UI.tPicks.includes(i) ? "☑" : "☐"}</span> ${esc(o.t)}</button>`).join("")}</div>
+      <div class="spacer"></div><button class="btn dark" id="tsubmit">Check my answers</button>`;
+    else h += `<div class="opts">${T.opts.map(o => `<button class="btn" disabled><span class="k">☐</span> ${esc(o.t)}</button>`).join("")}</div><p class="muted">${esc(nm(S, E.pid))} is choosing… Decide which ones you would pick.</p>`;
+  } else {
+    h += `<div class="opts">${T.opts.map((o, i) => { const pk = E.picks.includes(i), good = o.ok === pk;
+      return `<button class="btn ${o.ok ? "right" : pk ? "wrong" : ""}" disabled><span class="k">${pk ? "☑" : "☐"}</span> ${esc(o.t)} — <b>${o.ok ? "applies" : "does not apply"}</b> ${good ? "✓" : "✗"}</button><div class="why">${esc(o.why)}</div>`; }).join("")}</div>
+      <div class="banner"><b>${E.right}/${E.total} choices right.</b> ${E.pay ? `+${money(E.pay)}${E.right === E.total ? " and +1 focus" : ""}.` : "No pay this time; the notes are the reward."}</div>
+      ${T.key ? `<div class="fb"><b>Key takeaway for the short answer:</b><p class="small">${esc(T.key)}</p></div>` : ""}<div class="spacer"></div>${doneBtn(view)}`;
+  }
+  return h + `</div>`;
+}
+
+/* ---------- combat ---------- */
+function combatBody(view) {
+  const C = S.combat, E = C.enemy, n = S.order.length;
+  const foe = `<div class="box foe foebox">${enemySVG(E.art, 120, E.hp <= 0, E.boss)}<div class="info">
+    <div class="row"><b style="font-size:20px">${E.boss ? "BOSS · " : E.elite ? "ELITE · " : ""}${esc(E.name)}</b><span class="tag">${esc(subjName(E.subject))}</span></div>
+    <div class="hp big" style="margin:6px 0"><i style="width:${clamp(E.hp / E.max * 100, 0, 100)}%"></i></div><div class="hptxt">${E.hp}/${E.max} HP · hits for ${E.dmg}</div>
+    ${E.quip ? `<div class="hint">“${esc(E.quip)}”</div>` : ""}<div class="small"><b>Bar ${Math.round(C.bar * 100)}%</b> · Round ${Math.max(1, C.round)} of ${C.rounds} · Team so far ${C.okTot}/${C.qTot}</div>${C.dungeon ? `<div class="small"><b>${esc(dname(C.dungeon.d))}</b> · fight ${C.dungeon.room + 1} of ${C.dungeon.of}</div>` : ""}</div></div>`;
+  let body = "";
+  if (C.step === "talk") {
+    body = `<div class="box"><h3 style="margin-top:0">Team huddle <span class="timer" data-dl="${C.talkUntil + NET.offset}"></span></h3>
+      <p class="small">Bar: <b>${Math.round(C.bar * 100)}%</b> correct across ${C.rounds} rounds. Everyone gets their own question each round. Plan who uses focus and items.</p>
+      <ul>${S.order.map(p => { const c = clsOf(S.players[p]); return `<li><b>${esc(nm(S, p))}</b> (${esc(c.name)})${c.subject === E.subject ? " — <b>strong vs this topic</b>" : ""}</li>`; }).join("")}</ul>
+      ${isHostish() ? `<button class="btn dark" id="talkend">Ready — go!</button>` : ""}</div>`;
+  } else if (C.step === "answer") body = answerBody(view);
+  else body = revealBody(view);
+  return foe + `<div class="spacer"></div>` + body;
+}
+function chipsHTML() {
+  const C = S.combat;
+  return `<div class="row small" style="margin-top:10px">${S.order.map(p => `<span class="chip ${C.ans[p] !== undefined ? "dark" : ""}">${esc(nm(S, p))} ${!S.players[p].conn ? "· offline" : C.ans[p] !== undefined ? "✓ locked in" : "· thinking"}</span>`).join("")}</div>`;
+}
+function answerBody(view) {
+  const C = S.combat, local = NET.mode === "local";
+  if (local && S.order.length > 1 && UI.shownFor !== view) {
+    return `<div class="box cover"><h2>Pass to ${esc(nm(S, view))}</h2><p class="muted">No peeking, everyone else.</p><button class="btn dark center" id="show">I'm ${esc(nm(S, view))} — show my question</button>${chipsHTML()}</div>`;
+  }
+  const q = C.qs[view], pl = S.players[view];
+  if (!q || q.hidden) return `<div class="box">${chipsHTML()}</div>`;
+  if (C.ans[view] !== undefined) return `<div class="box"><b>Locked in.</b> Waiting for the team… <span class="timer" data-dl="${C.deadline ? C.deadline + NET.offset : ""}"></span>${chipsHTML()}</div>`;
+  const c = clsOf(pl), match = q.c === c.subject;
+  const dl = C.deadline ? C.deadline + (C.extra[view] || 0) + NET.offset : 0;
+  return `<div class="box"><div class="row" style="justify-content:space-between"><div class="small"><span class="tag">${esc(subjName(q.c))}</span>${match ? ` <b>job bonus ×1.25</b>` : ""}${q.retry ? ` <b>retry — you missed this one earlier</b>` : ""} · ${q.kind === "tf" ? "True / False" : "Multiple choice"}</div>${dl ? `<span class="timer" data-dl="${dl}"></span>` : ""}</div>
+    ${questionHTML(q, null, null, C.elim[view], !UI.lost)}
+    <div class="row" style="margin-top:10px"><button class="item" id="fifty" ${pl.focus >= 1 && q.opts.length >= 3 && !C.elim[view] ? "" : "disabled"}>50/50 · 1 focus</button>${C.deadline ? `<button class="item" id="time" ${pl.focus >= 1 ? "" : "disabled"}>+15 s · 1 focus</button>` : ""}<span class="small muted">Focus: ${pl.focus}</span></div>
+    ${chipsHTML()}</div>`;
+}
+function revealBody(view) {
+  const C = S.combat, R = C.reveal, E = C.enemy, key = C.tile + ":" + C.round;
+  if (UI.seenReveal !== key) { UI.seenReveal = key; if (R.total > 0) UI.anim = "shake"; }
+  let h = `<div class="box"><div class="reel">${S.order.map((p, i) => { const x = R.per[p];
+    return `<div class="r ${x.ok ? "ok" : ""}" style="animation-delay:${i * 0.12}s"><div><b>${esc(nm(S, p))}</b></div><div style="font-size:24px">${x.appealed ? "⚖" : x.ok ? "✓" : "✗"}</div>${x.appealed ? `<div class="small">appeal won</div>` : ""}<div class="small">${x.ok ? `${x.dmg} dmg${x.match ? " · job ×1.25" : ""}<br>` : ""}${x.perks && x.perks.length ? esc(x.perks.join(" · ")) + "<br>" : ""}${C.over === "win" ? "" : x.dodged ? "dodged!" : x.guarded ? "guard blocked" : x.blocked ? "shield blocked" : x.hit ? `took ${x.hit}${x.half ? " (½)" : ""}` : ""}${x.pto ? " · PTO used" : ""}${x.ko ? " · out" : ""}</div></div>`; }).join("")}</div>`;
+  h += `<p style="font-size:20px"><b>${R.perfect ? "PERFECT! ×1.25 — " : ""}${R.total} damage</b> to ${esc(E.name)}.</p>`;
+  if (C.over === "win") h += `<div class="banner"><b>${esc(E.name)} is out of the office!</b> ${C.final ? esc(TH().winText) : C.nextRoom ? "Next room — no break." : ""}${C.pay ? ` Bounty: +${money(C.pay)}.` : ""}${C.drop ? ` <br>Drop for ${esc(nm(S, C.drop.pid))}${C.drop.clean ? " (clean win)" : ""}: <b>${C.drop.gear ? `${esc(gearById(C.drop.gear).name)} — ${gearTag(gearById(C.drop.gear))}, equipped` : `${esc((PACK.items.find(i => i.id === C.drop.item) || {}).name || "item")}${C.drop.sold ? " (bag full: sold)" : ""}`}</b>.` : ""}</div>`;
+  if (C.over === "deadline") h += `<div class="banner"><b>Deadline missed.</b> ${esc(E.name)} holds the room. ${C.train ? "Training fight: no PTO lost." : `−1 ${esc(lifeWord())}.`} You get pushed back into the hall${C.dungeon ? " (rooms you cleared stay cleared)" : ""}. The bar here is ${Math.round(C.bar * 100)}% — the team hit ${C.qTot ? Math.round(C.okTot / C.qTot * 100) : 0}%.</div>`;
+  if (C.over === "lose") h += `<div class="banner"><b>${S.why === "final" ? `Missed the final deadline (bar ${Math.round(C.bar * 100)}%, team ${C.qTot ? Math.round(C.okTot / C.qTot * 100) : 0}%).` : `No ${esc(TH().livesName)} left.`}</b> ${esc(TH().loseText)}</div>`;
+  const mine = C.qs[view], show = NET.mode === "local" ? S.order : [view];
+  h += show.map(p => { const q = C.qs[p], x = R.per[p]; if (!q || q.hidden) return "";
+    return `<details ${p === view || NET.mode === "local" ? "open" : ""} class="fb"><summary><b>${esc(nm(S, p))}</b>: ${x.ok ? "correct" : "missed"} — ${esc(subjName(q.c))}</summary>${questionHTML(q, x.pick, q.ans, null, false)}${q.e ? `<p class="small">${esc(q.e)}</p>` : ""}</details>`; }).join("");
+  if (NET.mode !== "local") { const others = S.order.filter(p => p !== view && C.qs[p] && !C.qs[p].hidden);
+    if (others.length) h += `<details class="fb"><summary>Teammates' questions</summary>${others.map(p => { const q = C.qs[p]; return `<p><b>${esc(nm(S, p))}:</b> ${esc(q.q)}<br>Answer: <b>${esc(q.opts[q.ans])}</b></p>`; }).join("")}</details>`; }
+  h += `<div class="spacer"></div><button class="btn dark" id="next">${C.over === "win" ? (C.final ? "See results" : C.nextRoom ? "Next room" : "Back to the map") : C.over === "lose" ? "See results" : C.over === "deadline" ? "Back to the map" : "Next round"}</button>${NET.mode !== "local" ? ` <span class="small muted">Anyone can continue. Auto in <span class="timer" data-dl="${C.revealAt + REVEAL_AUTO_MS + NET.offset}"></span></span>` : ""}`;
+  void mine;
+  return h + `</div>`;
+}
+
+/* ---------- end ---------- */
+function shareText() {
+  const R = S.result, acc = S.order.reduce((a, p) => a + S.players[p].ok, 0), tot = S.order.reduce((a, p) => a + S.players[p].tot, 0);
+  const grid = S.grid.map(g => g === 2 ? "⬛" : g === 1 ? "🔳" : "⬜").join("").replace(/(.{10})/gu, "$1\n");
+  return `Study Quest — ${PACK.meta.title}\n${R.win ? "✅ " + TH().winText : "📦 " + TH().loseText}\n👥 ${S.order.length} · ⏱ ${mmss(R.ms)} · 🎯 ${tot ? Math.round(acc / tot * 100) : 0}% · ${TH().chaosName} ${Math.floor(S.chaos)}/10\n${S.order.map(p => clsOf(S.players[p]).name).join(", ")}\n${grid}\n${SITE_URL}`;
+}
+function endView() {
+  const R = S.result, txt = shareText();
+  app.innerHTML = `<div class="box center"><h1>${R.win ? esc(TH().winText) : esc(TH().loseText)}</h1>
+    <div class="row" style="justify-content:center">${S.order.map(p => personSVG(clsOf(S.players[p]).art, 64, !R.win)).join("")}</div>
+    <p>${mmss(R.ms)} · ${R.rounds} combat rounds · cleared: ${S.map.dungeons.filter(id => S.map.tiles[id].done).map(id => esc(dname(S.map.tiles[id].d))).join(", ") || "nothing yet"}</p></div>
+    <div class="spacer"></div>
+    <div class="box"><h3 style="margin-top:0">Promotions</h3><ul>${S.order.map(p => { const pl = S.players[p]; return `<li><b>${esc(pl.name)}</b> (${esc(clsOf(pl).name)}): ${pl.ok}/${pl.tot} correct${pl.tot ? ` (${Math.round(pl.ok / pl.tot * 100)}%)` : ""}</li>`; }).join("")}</ul></div>
+    <div class="spacer"></div>
+    <div class="box"><div class="share">${esc(txt)}</div><div class="row" style="margin-top:8px"><button class="btn" id="copyres">Copy results</button>${navigator.share ? `<button class="btn" id="shareres">Share…</button>` : ""}</div></div>
+    <div class="spacer"></div>
+    <div class="row">${isHostish() ? `<button class="btn dark" id="again">Run it back (same team)</button>` : `<span class="muted">The host can start another run.</span>`}<button class="btn" id="quit">Main menu</button></div>`;
+  bind("#copyres", () => copyText(txt, "Results copied."));
+  bind("#shareres", () => navigator.share({ text: txt }).catch(() => {}));
+  bind("#again", () => dispatch({ type: "RESET" }));
+  bind("#quit", leaveGame);
+}
+
+/* ---------- timers ---------- */
+function tick() {
+  const now = Date.now();
+  app.querySelectorAll("[data-dl]").forEach(el => { const dl = +el.dataset.dl; el.textContent = dl ? Math.max(0, Math.ceil((dl - now) / 1000)) + "s" : ""; });
+}
+setInterval(() => {
+  tick();
+  if (NET.mode === "host" && S && S.phase === "combat") {
+    const C = S.combat, now = Date.now();
+    if (C.step === "talk" && now >= C.talkUntil) dispatch({ type: "TALK_END" });
+    else if (C.step === "answer" && C.deadline && S.order.some(p => S.players[p].conn && C.ans[p] === undefined && now >= C.deadline + (C.extra[p] || 0))) dispatch({ type: "TIMEOUT" });
+    else if (C.step === "reveal" && now >= C.revealAt + REVEAL_AUTO_MS) dispatch({ type: "NEXT", round: C.round });
+  }
+  if (NET.mode === "client" && UI.lost && NET.peer && !NET.peer.destroyed && (!NET.conn || !NET.conn.open) && Date.now() > (UI.nextTry || 0)) { UI.nextTry = Date.now() + 4000; try { openConn(); } catch (e) {} }
+}, 300);
+document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-ck]"); if (b) { e.preventDefault(); calcPress(b.dataset.ck); } });
+document.addEventListener("keydown", e => {
+  if (!S || /INPUT|TEXTAREA/.test(document.activeElement && document.activeElement.tagName)) return;
+  const k = +e.key; if (k >= 1 && k <= 6) { const b = app.querySelector(`[data-o="${k - 1}"]`); if (b) b.click(); }
+  if (e.key === "Enter") { const b = app.querySelector("#next,#evdone,#roll,#show"); if (b && !e.repeat) b.click(); }
+});
+
+/* ============================================================
+   TESTS & BOTS  (?test runs the checks; ?demo=N plays N bot steps on one device)
+   ============================================================ */
+function pathStep(S, targets) {
+  const T = S.map.tiles, blocked = id => dungeonLocked(S, T[id]);
+  const prev = { [S.pos]: null }, Q = [S.pos];
+  while (Q.length) { const c = Q.shift(); if (c !== S.pos && targets.includes(c)) { let x = c; while (prev[x] !== S.pos) x = prev[x]; return x; }
+    for (const n of nbrs(c, T)) if (!(n in prev) && !blocked(n)) { prev[n] = c; Q.push(n); } }
+  return null;
+}
+function botAction(S, acc, r) {
+  const T = S.map && S.map.tiles;
+  switch (S.phase) {
+    case "lobby": { const p = S.order.find(x => !S.players[x].cls); return p ? { type: "PICK", pid: p, cls: pick(r, PACK.classes).id } : { type: "START" }; }
+    case "map": {
+      const p = active(S); if (!S.roll) return { type: "ROLL", pid: p };
+      if (S.moves > 0) {
+        const hurtTeam = S.order.some(q => S.players[q].hp < S.players[q].max * 0.45), goal = S.map.dungeons[Math.min(2, S.dcleared)];
+        const near = id => hexDist(id, S.pos) <= 3, ty = id => T[id].type;
+        const visited = S.botVisited = S.botVisited || {}; visited[S.pos] = 1;
+        const targets = [goal].concat(Object.keys(T).filter(id => !T[id].done && !visited[id] && near(id) && (ty(id) === "cache" || (hurtTeam && ty(id) === "rest") ||
+          (ty(id) === "shop" && S.gold >= 60) || (ty(id) === "recruit" && S.gold >= 50 && S.hires.length < MAX_HIRES) || (ty(id) === "work" && S.gold < 80) || ty(id) === "essay" || ty(id) === "tutor")));
+        const to = pathStep(S, targets); if (to) return { type: "MOVE", pid: p, to };
+      }
+      return { type: "END_MOVE", pid: p };
+    }
+    case "shop": { const p = active(S), pl = S.players[p], hires = S.shop.kind === "hires";
+      const buyer = !hires && S.shop.gear && S.order.map(q => S.players[q]).find(o => S.shop.gear.some(id => { const g = gearById(id), cur = gearOf(o, g.slot); return g.cost <= S.gold && (!cur || cur.tier < g.tier); }));
+      if (buyer) { const id = S.shop.gear.find(id => { const g = gearById(id), cur = gearOf(buyer, g.slot); return g.cost <= S.gold && (!cur || cur.tier < g.tier); }); return { type: "BUY", pid: buyer.id, item: id }; }
+      const it = S.shop.botDone ? null : S.shop.stock.map(id => hires ? hireById(id) : PACK.items.find(x => x.id === id)).find(it => it && it.cost <= S.gold && (hires ? S.hires.length < MAX_HIRES : pl.items.length < 4));
+      if (it) { S.shop.botDone = true; return { type: "BUY", pid: p, item: it.id }; } return { type: "SHOP_DONE", pid: p }; }
+    case "event": { const E = S.event;
+      if ((E.kind === "review" || E.kind === "lock") && !E.done) return { type: "ANSWER", pid: E.pid, i: r() < acc ? E.q.ans : (E.q.ans + 1) % E.q.opts.length };
+      if (E.qs && !E.done) { const q = E.qs[E.i]; return { type: "ANSWER", pid: E.pid, i: r() < acc ? q.ans : (q.ans + 1) % q.opts.length }; }
+      if (E.kind === "tutor" && !E.done) { const T = tutorOf(E); return { type: "ANSWER", pid: E.pid, picks: T.opts.map((o, i) => (r() < acc ? o.ok : !o.ok) ? i : -1).filter(i => i >= 0) }; }
+      if (E.kind === "essay" && !E.done) { const m = PACK.shortAnswers[E.sa].model, w = m.split(" "); return { type: "ANSWER", pid: E.pid, text: w.slice(0, Math.round(w.length * (r() < acc ? 0.7 : 0.3))).join(" ") }; }
+      if (E.offer && !E.took) return { type: "PICK_GEAR", pid: E.pid, i: 0 };
+      return { type: "EVENT_DONE", pid: E.pid }; }
+    case "combat": { const C = S.combat;
+      if (C.step === "talk") return { type: "TALK_END" };
+      if (C.step === "answer") { const p = S.order.find(x => C.ans[x] === undefined); const pl = S.players[p];
+        const hi = pl.items.findIndex(id => { const it = PACK.items.find(x => x.id === id); return it && it.fx.some(f => f.op === "heal") && pl.hp < pl.max * 0.4; });
+        if (hi >= 0) return { type: "USE", pid: p, idx: hi };
+        const q = C.qs[p]; return { type: "ANSWER", pid: p, i: r() < acc ? q.ans : (q.ans + 1) % q.opts.length }; }
+      return { type: "NEXT", round: C.round }; }
+  }
+  return null;
+}
+/* Simulated clock (seconds) for run-length estimates: answer ~16 s plus a little per extra player, reveal ~6 s. */
+function simTime(S, a, n) {
+  switch (a.type) { case "ROLL": return 4; case "MOVE": return 2; case "END_MOVE": return 1; case "BUY": return 6; case "SHOP_DONE": return 6;
+    case "TALK_END": return 8; case "PICK_GEAR": return 6; case "ANSWER": return S.phase === "event" ? (a.text != null ? 120 : a.picks ? 60 : 18) : 0; case "NEXT": return 16 + 2 * n + 6; case "EVENT_DONE": return 5; }
+  return 0;
+}
+function simulate(seed, n, acc) {
+  const sim = newGame(seed, "SIM"); sim.local = n === 1; const r = rngFor(seed, "bot");
+  for (let i = 1; i <= n; i++) reduce(sim, { type: "JOIN", pid: "p" + i, name: "Bot" + i, now: 0 });
+  let t = 0, steps = 0, combats = 0;
+  while (sim.phase !== "end" && steps < 8000) {
+    const a = botAction(sim, acc, r); if (!a) break; a.now = t * 1000; if (!a.pid) a.pid = "p1";
+    const ph = sim.phase; reduce(sim, a); if (ph !== "combat" && sim.phase === "combat") combats++;
+    t += simTime(sim, a, n); steps++;
+  }
+  return { log: sim.log.slice(-10), lives0: 4, why: sim.result ? sim.result.why : "", win: !!(sim.result && sim.result.win), ended: sim.phase === "end", min: t / 60, steps, rounds: sim.grid.length, combats, dcleared: sim.dcleared, turns: sim.turns, hires: sim.hires.length };
+}
+/* Win rate for one fight at a fixed accuracy (no items, no hires). */
+function fightOdds(bar, kind, n, acc, trials) {
+  let wins = 0;
+  for (let k = 0; k < trials; k++) {
+    const sim = newGame("F" + bar + kind + n + acc + k, "SIM"); sim.local = true; const r = rngFor(sim.seed, "bot");
+    for (let i = 1; i <= n; i++) { reduce(sim, { type: "JOIN", pid: "p" + i, name: "B" + i, now: 0 }); reduce(sim, { type: "PICK", pid: "p" + i, cls: pick(r, PACK.classes).id, now: 0 }); }
+    reduce(sim, { type: "START", now: 0 }); sim.lives = 99;
+    const e = PACK.enemies.find(x => kind === "boss" ? x.boss : kind === "elite" ? x.elite : !x.boss && !x.elite);
+    let t; if (kind === "rival") { t = Object.values(sim.map.tiles).find(x => x.type === "enemy"); t.enemy = e.id; t.bar = bar; t.tier = 0; }
+    else { t = sim.map.tiles[sim.map.dungeons[2]]; t.rooms = [{ enemy: e.id, bar }]; t.progress = 0; }
+    startCombat(sim, t.id, rr(sim));
+    let guard = 0;
+    while (sim.phase === "combat" && !sim.combat.over && guard++ < 500) {
+      const C = sim.combat;
+      if (C.step === "reveal") { reduce(sim, { type: "NEXT", round: C.round, now: 0 }); continue; }
+      for (const p of sim.order) if (C.ans[p] === undefined) reduce(sim, { type: "ANSWER", pid: p, i: r() < acc ? C.qs[p].ans : (C.qs[p].ans + 1) % C.qs[p].opts.length, now: 0 });
+    }
+    if (sim.combat && sim.combat.over === "win") wins++;
+  }
+  return Math.round(wins / trials * 100) + "%";
+}
+function runTests() {
+  const out = { pass: [], fail: [] }, ok = (c, m) => (c ? out.pass : out.fail).push(m);
+  const b = validatePack(BUILTIN_RAW); ok(b.ok, "built-in pack validates" + (b.ok ? "" : ": " + b.errors.join("; ")));
+  ok(b.pack.questions.length >= 200, "built-in has " + b.pack.questions.length + " questions");
+  const pv = validatePack(PRACTICE_RAW); ok(pv.ok && !pv.warnings.length && pv.pack.questions.length === 59, "practice exam pack validates (" + pv.pack.questions.length + " questions" + (pv.warnings.length ? "; " + pv.warnings.join(" ") : "") + ")");
+  const iv = validatePack(IHRM_RAW); ok(iv.ok && !iv.warnings.length, "IHRM Ch 4–7 pack validates (" + iv.pack.questions.length + " questions" + (iv.ok ? "" : "; " + iv.errors.join(" ")) + (iv.warnings.length ? "; " + iv.warnings.join(" ") : "") + ")");
+  let gbad = 0; for (const g of IHRM_GENS) for (let k = 0; k < 60; k++) { const o = g.make(rngFor("g", k)); if (!o.q || o.a.length < 3 || new Set(o.a).size !== o.a.length) gbad++; }
+  ok(!gbad, "IHRM lockpick calculators make 2+ distinct options (" + gbad + " bad)");
+  { const v1 = calcEval("12.5% × 80 + (3 − 1) ÷ 4"), v2 = calcEval("−2×(3+"), flagged = iv.pack.questions.filter(q => needsCalc(q)).length, keep = PACK;
+    PACK = iv.pack; const hcn = IHRM_GENS[2].make(rngFor("c", "c")), hq = { ...hcn, kind: "mc", id: "x" }; PACK = keep;
+    const open = questionHTML(prepQ({ ...hq, kind: "mc" }, rngFor("c", "d")), null, null, null, true).includes("calcbox"), shut = questionHTML(prepQ(hq, rngFor("c", "d")), 0, 0, null, false).includes("calcbox");
+    ok(v1 === 10.5 && isNaN(v2) && open && !shut && flagged <= 5, `calculator: math works (${v1}), shows on number questions only while open, ${flagged} IHRM bank questions need it`); }
+  ok(iv.pack.tutor.length >= 15 && iv.pack.tutor.every(t => t.opts.every(o => o.why)), "Employer 1-1 sessions load with a why for every choice (" + iv.pack.tutor.length + ")");
+  { const bad = iv.pack.questions.filter(q => q.kind === "mc" && q.a[0].length > 1.25 * Math.max(...q.a.slice(1).map(x => x.length))).length; ok(bad === 0, "no IHRM question gives the answer away by length (" + bad + " too long)"); }
+  ok(iv.pack.shortAnswers.length >= 12 && b.pack.shortAnswers.length >= 3, "short answers load (IHRM " + iv.pack.shortAnswers.length + ", Compensation " + b.pack.shortAnswers.length + ")");
+  { let badSA = 0; for (const sa of iv.pack.shortAnswers) { const hi = gradeSA(sa, sa.model).score, lo = gradeSA(sa, "I am not sure about this one at all honestly, sorry about that.").score; if (hi < 0.7 || lo > 0) badSA++; }
+    ok(!badSA, "every IHRM model answer grades Epic (≥70%) and a blank answer grades 0 (" + badSA + " bad)"); }
+  { const pl = { atk: 10, hp: 50, max: 60, focus: 3, maxFocus: 3, gear: {} }; equip(pl, "cas1"); equip(pl, "cas3"); equip(pl, "smart2"); equip(pl, "mouse2"); equip(pl, "notes3");
+    ok(pl.max === 60 && pl.atk === 10 + gearById("notes3").atk && pl.maxFocus === 3 + 2 + 1, "equipping and swapping gear keeps stats consistent (" + [pl.max, pl.atk, pl.maxFocus].join("/") + ")"); }
+  const base = JSON.parse(JSON.stringify(BUILTIN_RAW));
+  const broken = [
+    ["not an object", 42], ["wrong schema", { ...base, schema: "x" }], ["no boss", { ...base, enemies: base.enemies.filter(e => !e.boss) }],
+    ["too few questions", { ...base, questions: base.questions.slice(0, 10) }], ["two classes", { ...base, classes: base.classes.slice(0, 2) }],
+    ["bad item op", { ...base, items: [{ id: "x", name: "X", cost: 5, fx: [{ op: "explode", n: 9 }] }] }]
+  ];
+  for (const [label, p] of broken) { const v = validatePack(p); ok(!v.ok && v.errors.length > 0, `broken pack rejected (${label}): ${v.errors[0] || "NOT REJECTED"}`); }
+  const sneaky = { ...base, questions: base.questions.slice(0, 40).concat([{ kind: "mc", c: "7", q: "<img src=x onerror=alert(1)>", a: ["a", "a"] }, { kind: "tf", c: "99", q: "x", tf: true }]) };
+  const sv = validatePack(sneaky); ok(sv.ok && sv.warnings.length >= 2, "bad questions skipped with warnings (" + sv.warnings.length + ")");
+  loadBuiltin();
+  const part = QS.get("test") || "all", runs = [], errs = [];
+  if (part === "all" || part === "sim") for (let n = 1; n <= 6; n++) for (let k = 0; k < 34; k++) { try { runs.push({ n, ...simulate("T" + n + "x" + k, n, +(QS.get("acc") || 0.72)) }); } catch (e) { errs.push(n + "/" + k + ": " + e.message + " " + (e.stack || "").split("\n")[1]); } }
+  out.soloLoss = runs.filter(x => x.n === 1 && !x.win).slice(0, 2).map(x => ({ turns: x.turns, combats: x.combats, d: x.dcleared, log: x.log }));
+  ok(!errs.length, "autoplay without exceptions (" + runs.length + " runs)" + (errs.length ? " — " + errs.slice(0, 3).join(" | ") : ""));
+  ok(runs.every(x => x.ended), "every autoplay run ends (" + runs.filter(x => !x.ended).length + " stuck)");
+  const byN = {}; for (const x of runs) (byN[x.n] = byN[x.n] || []).push(x);
+  out.byPlayers = Object.fromEntries(Object.entries(byN).map(([n, xs]) => { const m = xs.map(x => x.min).sort((a, b) => a - b);
+    return [n, { winRate: Math.round(xs.filter(x => x.win).length / xs.length * 100) + "%", medianMin: +m[m.length >> 1].toFixed(1), minMin: +m[0].toFixed(1), maxMin: +m[m.length - 1].toFixed(1), avgRounds: +(xs.reduce((a, x) => a + x.rounds, 0) / xs.length).toFixed(1), avgCombats: +(xs.reduce((a, x) => a + x.combats, 0) / xs.length).toFixed(1), avgTurns: +(xs.reduce((a, x) => a + x.turns, 0) / xs.length).toFixed(1), dungeons: [0, 1, 2, 3].map(d => xs.filter(x => x.dcleared === d).length).join("/"), why: ["hp", "deadline", "layoffs", "final"].map(w => w + ":" + xs.filter(x => !x.win && x.why === w).length).join(" ") }]; }));
+  out.barOdds = {};
+  if (part === "all" || part === "odds" || part === "rival") for (const n of [1, 2, 3, 4, 6]) { const row = {}; for (const acc of [0.3, 0.4, 0.5, 0.6, 0.75]) row[Math.round(acc * 100) + "%"] = fightOdds(REGION_BARS[0], "rival", n, acc, 200); out.barOdds[`n${n} rival bar40`] = row; }
+  if (part === "all" || part === "odds") for (const n of [1, 3, 6]) for (const [bar, kind] of [[0.6, "normal"], [0.8, "elite"], [0.9, "boss"]]) { const row = {}; for (const acc of [0.5, 0.6, 0.7, 0.8, 0.9, 0.95]) row[Math.round(acc * 100) + "%"] = fightOdds(bar, kind, n, acc, 100); out.barOdds[`n${n} bar${bar * 100} ${kind}`] = row; }
+  // map sanity
+  let mapBad = 0; for (let k = 0; k < 200; k++) { const m = genMap("M" + k), T = m.tiles, d = bfs(m.start, T);
+    const cnt = ty => Object.values(T).filter(t => t.type === ty).length;
+    if (Object.keys(d).length !== Object.keys(T).length || cnt("dungeon") !== 3 || cnt("enemy") < 5 || cnt("recruit") < 2 || cnt("cache") < 3 || d[m.dungeons[2]] < 10) mapBad++; }
+  ok(!mapBad, "200 maps connected, 3 dungeons, rivals, job fairs, caches; HQ far away (" + mapBad + " bad)");
+  // determinism
+  ok(JSON.stringify(simulate("DET", 3, 0.7)) === JSON.stringify(simulate("DET", 3, 0.7)), "same seed → same run");
+  { let qn = 0, drops = 0, noPTO = true, bad = "";
+    for (let k = 0; k < 40; k++) { const sim = newGame("RV" + k, "SIM"); sim.local = true; const r = rngFor(sim.seed, "bot");
+      for (let i = 1; i <= 3; i++) { reduce(sim, { type: "JOIN", pid: "p" + i, name: "B" + i, now: 0 }); reduce(sim, { type: "PICK", pid: "p" + i, cls: PACK.classes[i % PACK.classes.length].id, now: 0 }); }
+      reduce(sim, { type: "START", now: 0 }); const t = Object.values(sim.map.tiles).find(x => x.type === "enemy"), lives = sim.lives, acc = k % 2 ? 1 : 0;
+      startCombat(sim, t.id, rr(sim)); qn = Math.max(qn, sim.combat.rounds);
+      let g = 0; while (sim.phase === "combat" && !sim.combat.over && g++ < 200) { const C = sim.combat; if (C.step === "reveal") { reduce(sim, { type: "NEXT", round: C.round, now: 0 }); continue; } for (const p of sim.order) if (C.ans[p] === undefined) reduce(sim, { type: "ANSWER", pid: p, i: acc ? C.qs[p].ans : (C.qs[p].ans + 1) % C.qs[p].opts.length, now: 0 }); }
+      if (sim.combat.drop) drops++; if (!acc && sim.lives < lives && sim.combat.over === "deadline") noPTO = false;
+      const keep = S; S = sim; try { revealBody("p1"); } catch (e) { bad = e.message; } S = keep; }
+    ok(qn <= 5 && drops === 20 && noPTO && !bad, `rival fights: ≤5 questions (${qn}), clean wins always drop (${drops}/20), a missed rival costs no PTO, reveal renders${bad ? " — " + bad : ""}`); }
+  // redaction
+  S = newGame("RED", "ABCD"); ["p1", "p2"].forEach(p => reduce(S, { type: "JOIN", pid: p, name: p, now: 1 })); S.order.forEach(p => reduce(S, { type: "PICK", pid: p, cls: PACK.classes[0].id, now: 1 }));
+  reduce(S, { type: "START", now: 1 }); const ce = Object.values(S.map.tiles).find(t => t.type === "enemy"); startCombat(S, ce.id, rr(S)); beginRound(S, rr(S));
+  const red = redact("p2"); ok(red.combat.qs.p1.hidden && red.combat.qs.p2.ans === undefined && !red.tokens, "clients cannot see others' questions or answers");
+  // a client's typed short answer and gear pick travel through hostMsg like a real phone
+  { const tu = Object.values(S.map.tiles).find(t => t.type === "tutor"); S.phase = "map"; S.combat = null; trigger(S, tu, rr(S)); S.event.pid = "p2";
+    const T = tutorOf(S.event), right = T.opts.map((o, i) => o.ok ? i : -1).filter(i => i >= 0), g0 = S.gold;
+    hostMsg({ pid: "p2", send() {} }, { t: "intent", a: { type: "ANSWER", picks: right } }); const E = S.event;
+    ok(E.done && E.right === E.total && S.gold === g0 + TUTOR_PAY, "client Employer 1-1 picks are graded on the host (" + E.right + "/" + E.total + ")");
+    reduce(S, { type: "EVENT_DONE", pid: "p2", now: 0 }); }
+  { const ess = Object.values(S.map.tiles).find(t => t.type === "essay"); S.phase = "map"; S.combat = null; trigger(S, ess, rr(S)); S.event.pid = "p2";
+    const fake = { pid: "p2", send() {} }, sa = PACK.shortAnswers[S.event.sa];
+    hostMsg(fake, { t: "intent", a: { type: "ANSWER", text: sa.model } }); const E = S.event;
+    hostMsg(fake, { t: "intent", a: { type: "PICK_GEAR", i: 0 } });
+    ok(E.done && E.score >= 70 && E.took && S.players.p2.gear[gearById(E.took).slot] === E.took, "client short answer is graded on the host and the gear pick equips (" + E.score + "%, " + E.took + ")"); }
+  S = null;
+  return out;
+}
+function demo(steps) {
+  NET.mode = "local"; S = newGame(QS.get("seed") || "DEMO", "LOCAL"); S.local = true; ME = "p1";
+  const names = (QS.get("names") || "Dana,Ravi,Kim").split(",");
+  names.forEach((x, i) => reduce(S, { type: "JOIN", pid: "p" + (i + 1), name: x, now: 0 }));
+  const r = rngFor("demo", "bot"); let t = 0;
+  const stop = QS.get("stop");
+  for (let i = 0; i < steps && S.phase !== "end"; i++) {
+    const a = botAction(S, 0.75, r); if (!a) break; a.now = t; if (!a.pid) a.pid = "p1"; reduce(S, a); t += 5000;
+    if (stop && i > steps / 2 && (stop === S.phase || (S.combat && S.combat.step === stop))) break;
+  }
+  const force = QS.get("force"); // screenshot hook: open a tile of this type for the active player
+  if (force === "boss" && S.map) { const tl = S.map.tiles[S.map.dungeons[2]]; tl.progress = tl.rooms.length - 1; S.event = null; startCombat(S, tl.id, rr(S)); }
+  else if (force && S.map) { const tl = Object.values(S.map.tiles).find(x => x.type === force); if (tl) { tl.done = false; S.phase = "map"; S.combat = null; S.event = null; trigger(S, tl, rr(S));
+    const fill = QS.get("fill"); if (fill === "essay" && S.event) essayAnswer(S, S.event, S.players[S.event.pid], PACK.shortAnswers[S.event.sa].model.split(" ").slice(0, 40).join(" "), rr(S));
+    if (QS.get("calcq") && S.event && S.event.q) S.event.q = prepQ({ ...IHRM_GENS[2].make(rr(S)), kind: "mc", c: "5", d: 3, id: "lockdemo" }, rr(S));
+    if (fill === "tutor" && S.event) tutorAnswer(S, S.event, S.players[S.event.pid], [0, 1, 4]);
+    if (fill === "work" && S.event) { const pl = S.players[S.event.pid]; shiftAnswer(S, S.event, pl, { i: S.event.qs[0].ans }, rr(S)); }
+    if (QS.get("gear")) S.order.forEach((p, i) => { equip(S.players[p], ["mouse2", "notes3", "mouse1"][i % 3]); equip(S.players[p], ["pro2", "cas3", "smart1"][i % 3]); }); } }
+  if (QS.get("show")) UI.shownFor = viewer();
+  render();
+  if (QS.get("press")) for (const k of QS.get("press").split(",")) { const b = document.querySelector(`[data-ck="${k}"]`); if (b) b.click(); } // screenshot hook: tap calculator keys
+}
+
+/* Online bot (?bot=1): plays this device's seat, for two-device tests. */
+function onlineBot() {
+  if (!S || !ME || UI.lost) return;
+  const me = S.players[ME]; if (!me) return; const host = NET.mode === "host";
+  if (S.phase === "lobby") { if (!me.cls) return dispatch({ type: "PICK", cls: PACK.classes[S.order.indexOf(ME) % PACK.classes.length].id }); if (host && S.order.length >= +(QS.get("players") || 2) && S.order.every(p => S.players[p].cls)) dispatch({ type: "START" }); return; }
+  if (S.phase === "map" && active(S) === ME) {
+    if (!S.roll) return dispatch({ type: "ROLL" });
+    const to = S.moves > 0 && pathStep(S, [S.map.dungeons[Math.min(2, S.dcleared)]]); return dispatch(to ? { type: "MOVE", to } : { type: "END_MOVE" });
+  }
+  if (S.phase === "shop" && active(S) === ME) return dispatch({ type: "SHOP_DONE" });
+  if (S.phase === "event" && S.event.pid === ME) { const E = S.event;
+    if (E.done) return E.offer && !E.took ? dispatch({ type: "PICK_GEAR", i: 0 }) : dispatch({ type: "EVENT_DONE" });
+    return E.kind === "essay" ? dispatch({ type: "ANSWER", text: "Test answer from the online bot about position filling, management development and organization development." }) : dispatch({ type: "ANSWER", i: 0 }); }
+  if (S.phase === "combat") { const C = S.combat;
+    if (C.step === "answer" && C.ans[ME] === undefined && C.qs[ME] && !C.qs[ME].hidden) return dispatch({ type: "ANSWER", i: host && C.qs[ME].ans != null ? C.qs[ME].ans : 0 });
+    if (C.step === "reveal" && host) return dispatch({ type: "NEXT", round: C.round }); }
+}
+if (QS.has("bot")) { window.__sq = () => ({ S, ME, mode: NET.mode, status: NET.status, err: UI.err, lost: UI.lost, code: NET.code }); setInterval(onlineBot, 700); }
+if (QS.get("name")) UI.name = QS.get("name");
+
+/* ---------- boot ---------- */
+loadDefault();
+if (QS.has("test")) { let res; try { res = runTests(); } catch (e) { res = { crash: e.message, stack: String(e.stack) }; } app.innerHTML = `<pre id="testout">${esc(JSON.stringify(res, null, 1))}</pre>`; }
+else if (QS.has("demo")) demo(+QS.get("demo") || 0);
+else {
+  const h = (location.hash.match(/^#([A-Za-z]{4})$/) || [])[1]; if (h) UI.joinCode = h.toUpperCase();
+  if (QS.get("auto") === "host" && UI.name) startHost(); else if (QS.get("join") && UI.name) startClient(QS.get("join")); else render();
+}
+</script>
+</body>
+</html>
