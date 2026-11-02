@@ -169,6 +169,15 @@ input.codein{text-transform:uppercase;letter-spacing:6px;font-size:22px;width:15
 .gearbtn.t2{border-width:3px}
 .gearbtn.t3{outline:2.5px dashed var(--ink);outline-offset:2px}
 .btn.on{background:var(--ink);color:#fff}
+.calc{margin:12px 0 4px;max-width:300px;border:2.5px solid var(--ink);border-radius:14px 10px 16px 9px;background:#fff;box-shadow:3px 4px 0 var(--ink);padding:8px;transform:rotate(-.4deg)}
+.calc .ct{font-size:13px;font-weight:bold;margin-bottom:6px}
+.calc .cd{border:2px solid var(--ink);border-radius:8px 6px 9px 5px;padding:4px 8px;text-align:right;min-height:46px;background:#fbfaf5}
+.calc .ce{font-size:14px;color:var(--mid);word-break:break-all;min-height:18px}
+.calc .co{font-size:20px;font-weight:bold;min-height:24px}
+.calc .ck{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:7px}
+.calc .ck button{font:inherit;font-size:17px;border:2px solid var(--ink);border-radius:9px 7px 10px 6px;background:#fff;color:var(--ink);padding:6px 0;cursor:pointer;box-shadow:1.5px 2px 0 var(--ink)}
+.calc .ck button:active{transform:translate(1px,1px);box-shadow:none}
+.calc .ck .op{background:#f1efe6}.calc .ck .eq{background:var(--ink);color:#fff}
 .why{font-size:13px;margin:2px 0 8px 4px}
 </style>
 </head>
@@ -1486,7 +1495,7 @@ const IG = (c, make) => IHRM_GENS.push({ c, d: 3, make });
 const iRp = (r, a) => a[Math.floor(r() * a.length)];
 IG(4, r => {
   const m = iRp(r, [1, 2, 4, 5, 7, 9, 11, 14, 18, 24, 36]), ans = m >= 12 ? "Corporate (long-term) expatriate" : m >= 3 ? "Short-term assignee" : "Flexpatriate";
-  return { q: `Using Table 4.2, an assignee will spend ${m} month${m > 1 ? "s" : ""} abroad. Which assignment type fits that duration?`,
+  return { q: `Comparing assigned expatriates by assignment length, an assignee will spend ${m} month${m > 1 ? "s" : ""} abroad. Which assignment type fits that duration?`,
     a: [ans, ...["Corporate (long-term) expatriate", "Short-term assignee", "Flexpatriate", "International commuter"].filter(x => x !== ans).slice(0, 3)],
     e: "Flexpatriates: usually 1–3 months. Short-term: 3–12 months. Corporate expatriates: 12 months or more." };
 });
@@ -1596,13 +1605,13 @@ function loadDefault() { return loadById(DEFAULT_PACK); }
 function prepQ(q, r) {
   if (q.kind === "tf") return { id: q.id, kind: "tf", c: q.c, d: q.d, q: q.q, e: q.e, tbl: q.tbl, opts: ["True", "False"], ans: q.tf ? 0 : 1 };
   const order = shuffle(q.a.map((_, i) => i), r);
-  return { id: q.id, kind: "mc", c: q.c, d: q.d, q: q.q, e: q.e, tbl: q.tbl, opts: order.map(i => q.a[i]), ans: order.indexOf(0) };
+  return { id: q.id, kind: "mc", c: q.c, d: q.d, q: q.q, e: q.e, tbl: q.tbl, opts: order.map(i => q.a[i]), ans: order.indexOf(0), calc: !!q.calc };
 }
 /* Host-only: pick a question for a subject (null = any) at or below a difficulty. Generated calculators come only from the built-in pack. */
 function drawQ(S, subj, maxD, r) {
   if (PACK.gens && r() < 0.3) {
     const gs = PACK.gens.filter(g => (!subj || String(g.c) === subj) && g.d <= maxD);
-    if (gs.length) { const g = pick(r, gs), o = g.make(r); return prepQ({ ...o, kind: "mc", c: String(g.c), d: g.d, id: "g" + S.rn }, r); }
+    if (gs.length) { const g = pick(r, gs), o = g.make(r); return prepQ({ ...o, kind: "mc", c: String(g.c), d: g.d, id: "g" + S.rn, calc: true }, r); }
   }
   const all = PACK.questions, fresh = q => !S.used.includes(q.id);
   let pool = all.filter(q => (!subj || q.c === subj) && q.d <= maxD && fresh(q));
@@ -2617,13 +2626,43 @@ function shopBody(view) {
     <div class="spacer"></div>
     ${mine ? `<button class="btn dark" id="shopdone">Back to work</button>` : `<p class="muted">${esc(nm(S, active(S)))} leaves when the team is done.</p>`}</div>`;
 }
+/* Mini calculator: drawn inside an OPEN question that needs number crunching, so it is gone as soon as the question is answered or closed. */
+const NUM_RE = /\d[\d,]*(?:\.\d+)?/g, CALC_HINT = /[$%×÷]|percent|rate|ratio|total|average|cost|salary|pay\b|budget|wage|spread|midpoint|compa|how much|how many/i;
+const needsCalc = q => !!q && !q.hidden && (q.calc === true || ((String(q.q).match(NUM_RE) || []).length >= 2 && CALC_HINT.test(q.q)) ||
+  (Array.isArray(q.tbl) && q.tbl.flat().filter(x => /^[$€£]?\s?\d[\d,]*(\.\d+)?\s?%?$/.test(String(x).trim())).length >= 3));
+/* Safe evaluator (no eval): + − × ÷, parentheses, % (divide by 100), decimals, unary minus. NaN on bad input. */
+function calcEval(src) {
+  const t = String(src).replace(/,/g, "").match(/\d*\.?\d+|[-+×÷*/()%−]/g) || []; let i = 0;
+  const peek = () => t[i], take = () => t[i++];
+  const prim = () => { const k = take(); if (k === "(") { const v = expr(); if (take() !== ")") return NaN; return v; } if (k === "-" || k === "−") return -fact(); return k != null && /\d/.test(k) ? parseFloat(k) : NaN; };
+  const fact = () => { let v = prim(); while (peek() === "%") { take(); v /= 100; } return v; };
+  const term = () => { let v = fact(); while (["×", "÷", "*", "/"].includes(peek())) { const o = take(), w = fact(); v = o === "×" || o === "*" ? v * w : v / w; } return v; };
+  function expr() { let v = term(); while (peek() === "+" || peek() === "-" || peek() === "−") { const o = take(), w = term(); v = o === "+" ? v + w : v - w; } return v; }
+  if (!t.length) return NaN; const v = expr(); return i === t.length && isFinite(v) ? v : NaN;
+}
+const calcFmt = v => isNaN(v) ? "" : (Math.round(v * 1e8) / 1e8).toLocaleString("en-US", { maximumFractionDigits: 8 });
+function calcHTML(q) {
+  const key = String(q.id) + "|" + String(q.q).length; if (UI.calcKey !== key) { UI.calcKey = key; UI.calcExpr = ""; }
+  const keys = ["C", "⌫", "(", ")", "7", "8", "9", "÷", "4", "5", "6", "×", "1", "2", "3", "−", "0", ".", "%", "+"];
+  return `<div class="calc" id="calcbox"><div class="ct">🧮 Scratch calculator</div><div class="cd"><div class="ce" id="cexpr">${esc(UI.calcExpr)}</div><div class="co" id="cout">${esc(calcFmt(calcEval(UI.calcExpr)))}</div></div>
+    <div class="ck">${keys.map(k => `<button type="button" class="${/[÷×−+]/.test(k) ? "op" : ""}" data-ck="${k}">${k}</button>`).join("")}<button type="button" class="eq" data-ck="=" style="grid-column:span 4">=</button></div></div>`;
+}
+function calcPress(k) {
+  let x = UI.calcExpr || "";
+  if (k === "C") x = ""; else if (k === "⌫") x = x.slice(0, -1);
+  else if (k === "=") { const v = calcEval(x); x = isNaN(v) ? x : String(Math.round(v * 1e8) / 1e8); }
+  else if (x.length < 40) x += k;
+  UI.calcExpr = x;
+  const e = document.getElementById("cexpr"), o = document.getElementById("cout");
+  if (e) e.textContent = x; if (o) o.textContent = calcFmt(calcEval(x));
+}
 function questionHTML(q, pickIdx, revealAns, elim, clickable) {
   return `${q.tbl ? tableHTML(q.tbl) : ""}<div class="q">${esc(q.q)}</div>
     <div class="opts">${q.opts.map((o, i) => {
       let cls = "btn";
       if (revealAns != null) { if (i === revealAns) cls += " right"; else if (i === pickIdx) cls += " wrong"; }
       else if (elim && elim.includes(i)) cls += " gone";
-      return `<button class="${cls}" ${clickable ? `data-o="${i}"` : "disabled"}><span class="k">${i + 1}.</span> ${esc(o)}</button>`; }).join("")}</div>`;
+      return `<button class="${cls}" ${clickable ? `data-o="${i}"` : "disabled"}><span class="k">${i + 1}.</span> ${esc(o)}</button>`; }).join("")}</div>${clickable && needsCalc(q) ? calcHTML(q) : ""}`;
 }
 function eventBody(view) {
   const E = S.event, T = TH().tiles;
@@ -2639,7 +2678,7 @@ function eventBody(view) {
   const rw = E.reward ? PACK.items.find(x => x.id === E.reward.item) : null;
   const rwText = rw ? ` <b>${esc(nm(S, E.pid))} gets ${esc(rw.name)}${E.reward.sold ? ` (bag full, sold for ${money(20)})` : ""}.</b>` : "";
   let h = lock
-    ? `<div class="box"><h3 style="margin-top:0">${esc(T.chest)}: ${esc(nm(S, E.pid))} picks the lock</h3><p class="small">A calculation. Right = a rare item + ${money(15)}. Wrong = the alarm goes off (−10 HP) and it stays locked.</p>`
+    ? `<div class="box"><h3 style="margin-top:0">${esc(T.chest)}: ${esc(nm(S, E.pid))} picks the lock</h3><p class="small">${needsCalc(E.q) ? "A numbers question — use the calculator." : "A tricky applied question."} Right = a rare item + ${money(15)}. Wrong = the alarm goes off (−10 HP) and it stays locked.</p>`
     : `<div class="box"><h3 style="margin-top:0">${esc(T.review)}: ${esc(nm(S, E.pid))}</h3><p class="small">One question, alone. Right = an item, +${money(15)}, and +1 focus for everyone. Wrong = −12 HP and the ${esc(TH().chaosName)} goes up.</p>`;
   if (!E.done) h += mine ? questionHTML(E.q, null, null, null, true) : `<p class="muted">${esc(nm(S, E.pid))} is ${lock ? "working the lock" : "in a closed-door review"}…</p>`;
   else {
@@ -2797,6 +2836,7 @@ setInterval(() => {
   }
   if (NET.mode === "client" && UI.lost && NET.peer && !NET.peer.destroyed && (!NET.conn || !NET.conn.open) && Date.now() > (UI.nextTry || 0)) { UI.nextTry = Date.now() + 4000; try { openConn(); } catch (e) {} }
 }, 300);
+document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-ck]"); if (b) { e.preventDefault(); calcPress(b.dataset.ck); } });
 document.addEventListener("keydown", e => {
   if (!S || /INPUT|TEXTAREA/.test(document.activeElement && document.activeElement.tagName)) return;
   const k = +e.key; if (k >= 1 && k <= 6) { const b = app.querySelector(`[data-o="${k - 1}"]`); if (b) b.click(); }
@@ -2897,6 +2937,10 @@ function runTests() {
   const iv = validatePack(IHRM_RAW); ok(iv.ok && !iv.warnings.length, "IHRM Ch 4–7 pack validates (" + iv.pack.questions.length + " questions" + (iv.ok ? "" : "; " + iv.errors.join(" ")) + (iv.warnings.length ? "; " + iv.warnings.join(" ") : "") + ")");
   let gbad = 0; for (const g of IHRM_GENS) for (let k = 0; k < 60; k++) { const o = g.make(rngFor("g", k)); if (!o.q || o.a.length < 3 || new Set(o.a).size !== o.a.length) gbad++; }
   ok(!gbad, "IHRM lockpick calculators make 2+ distinct options (" + gbad + " bad)");
+  { const v1 = calcEval("12.5% × 80 + (3 − 1) ÷ 4"), v2 = calcEval("−2×(3+"), flagged = iv.pack.questions.filter(q => needsCalc(q)).length, keep = PACK;
+    PACK = iv.pack; const hcn = IHRM_GENS[2].make(rngFor("c", "c")), hq = { ...hcn, kind: "mc", id: "x" }; PACK = keep;
+    const open = questionHTML(prepQ({ ...hq, kind: "mc" }, rngFor("c", "d")), null, null, null, true).includes("calcbox"), shut = questionHTML(prepQ(hq, rngFor("c", "d")), 0, 0, null, false).includes("calcbox");
+    ok(v1 === 10.5 && isNaN(v2) && open && !shut && flagged <= 5, `calculator: math works (${v1}), shows on number questions only while open, ${flagged} IHRM bank questions need it`); }
   ok(iv.pack.tutor.length >= 15 && iv.pack.tutor.every(t => t.opts.every(o => o.why)), "Employer 1-1 sessions load with a why for every choice (" + iv.pack.tutor.length + ")");
   { const bad = iv.pack.questions.filter(q => q.kind === "mc" && q.a[0].length > 1.25 * Math.max(...q.a.slice(1).map(x => x.length))).length; ok(bad === 0, "no IHRM question gives the answer away by length (" + bad + " too long)"); }
   ok(iv.pack.shortAnswers.length >= 12 && b.pack.shortAnswers.length >= 3, "short answers load (IHRM " + iv.pack.shortAnswers.length + ", Compensation " + b.pack.shortAnswers.length + ")");
@@ -2973,11 +3017,13 @@ function demo(steps) {
   if (force === "boss" && S.map) { const tl = S.map.tiles[S.map.dungeons[2]]; tl.progress = tl.rooms.length - 1; S.event = null; startCombat(S, tl.id, rr(S)); }
   else if (force && S.map) { const tl = Object.values(S.map.tiles).find(x => x.type === force); if (tl) { tl.done = false; S.phase = "map"; S.combat = null; S.event = null; trigger(S, tl, rr(S));
     const fill = QS.get("fill"); if (fill === "essay" && S.event) essayAnswer(S, S.event, S.players[S.event.pid], PACK.shortAnswers[S.event.sa].model.split(" ").slice(0, 40).join(" "), rr(S));
+    if (QS.get("calcq") && S.event && S.event.q) S.event.q = prepQ({ ...IHRM_GENS[2].make(rr(S)), kind: "mc", c: "5", d: 3, id: "lockdemo" }, rr(S));
     if (fill === "tutor" && S.event) tutorAnswer(S, S.event, S.players[S.event.pid], [0, 1, 4]);
     if (fill === "work" && S.event) { const pl = S.players[S.event.pid]; shiftAnswer(S, S.event, pl, { i: S.event.qs[0].ans }, rr(S)); }
     if (QS.get("gear")) S.order.forEach((p, i) => { equip(S.players[p], ["mouse2", "notes3", "mouse1"][i % 3]); equip(S.players[p], ["pro2", "cas3", "smart1"][i % 3]); }); } }
   if (QS.get("show")) UI.shownFor = viewer();
   render();
+  if (QS.get("press")) for (const k of QS.get("press").split(",")) { const b = document.querySelector(`[data-ck="${k}"]`); if (b) b.click(); } // screenshot hook: tap calculator keys
 }
 
 /* Online bot (?bot=1): plays this device's seat, for two-device tests. */
