@@ -6,7 +6,7 @@
 <title>Study Quest</title>
 <meta name="description" content="Co-op study board game for 1–6 players. Answer your own questions, combine your answers into damage, and try not to get fired.">
 <meta property="og:title" content="Study Quest — try not to get fired">
-<meta property="og:description" content="Co-op study game for MGMT 660 Exam 2 (IHRM Ch 4–7). Tap to play in your browser, no download.">
+<meta property="og:description" content="Co-op study game for MGMT 660 Exam 3 (IHRM Ch 8–10). Tap to play in your browser, no download.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://computergenx.github.io/study-quest/">
 <meta name="theme-color" content="#fbfaf5">
@@ -494,8 +494,8 @@ const PRACTICE_RAW = { ...BUILTIN_RAW,
 /*@@IHRM@@*/
 /* built-in packs: shared by id, so clients never need the file */
 const BUILTIN_PACKS = { practice: { raw: PRACTICE_RAW, label: "Practice Exam 2 (59 questions)" }, builtin: { raw: BUILTIN_RAW, label: "Full Ch 7–11 bank (237 + calculators)" },
-  ihrm: { raw: IHRM_RAW, label: "MGMT 660 International Business Ch 4–7 (" + IHRM_QS.length + " questions)", gens: IHRM_GENS } };
-const DEFAULT_PACK = "ihrm";
+  ihrm3: { raw: IHRM_RAW, label: "MGMT 660 International Business Exam 3, Ch 8–10 (" + IHRM_QS.length + " questions)", gens: IHRM_GENS } };
+const DEFAULT_PACK = "ihrm3";
 
 /* ---------- current pack ---------- */
 let PACK = null, PACK_RAW = null, PACK_ID = "builtin";
@@ -544,7 +544,7 @@ const DUNGEON_PLAN = [
   { bars: [0.85, 0.88, 0.9], kinds: ["elite", "elite", "boss"], tier: 3, reward: 0 }
 ];
 const FIGHT_QS = { normal: 8, elite: 9, boss: 12 };
-const TALK_MS = 8000, ANSWER_MS = 25000, REVEAL_AUTO_MS = 12000, MAX_PLAYERS = 6, MAX_HIRES = 2, MAP_W = 13, MAP_H = 9;
+const TALK_MS = 8000, ANSWER_MS = 25000, TABLE_EXTRA_MS = 20000, REVEAL_AUTO_MS = 12000, MAX_PLAYERS = 6, MAX_HIRES = 2, MAP_W = 13, MAP_H = 9;
 const DIRS = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
 const hexId = (q, r) => q + "," + r;
 const qr = id => id.split(",").map(Number);
@@ -796,6 +796,7 @@ function beginRound(S, r) {
     if (w && w.retry && miss.length && r() < 0.5) { const src = PACK.questions.find(q => q.id === miss.shift()); if (src) { C.qs[p] = { ...prepQ(src, r), retry: true }; continue; } }
     C.qs[p] = drawQ(S, ar && ar.lean && r() < ar.lean ? weakest(pl) : r() < 0.6 ? C.enemy.subject : pick(r, keys), maxD, r);
   }
+  if (C.deadline) for (const p of S.order) if (C.qs[p] && C.qs[p].tbl) C.extra[p] = TABLE_EXTRA_MS; // matching tables take longer to read
 }
 function cAnswer(S, a) {
   const C = S.combat; if (C.step !== "answer" || !C.qs[a.pid] || C.ans[a.pid] !== undefined) return;
@@ -1544,8 +1545,8 @@ function shopBody(view) {
     ${mine ? `<button class="btn dark" id="shopdone">Back to work</button>` : `<p class="muted">${esc(nm(S, active(S)))} leaves when the team is done.</p>`}</div>`;
 }
 /* Mini calculator: drawn inside an OPEN question that needs number crunching, so it is gone as soon as the question is answered or closed. */
-const NUM_RE = /\d[\d,]*(?:\.\d+)?/g, CALC_HINT = /[$%×÷]|percent|rate|ratio|total|average|cost|salary|pay\b|budget|wage|spread|midpoint|compa|how much|how many/i;
-const needsCalc = q => !!q && !q.hidden && (q.calc === true || ((String(q.q).match(NUM_RE) || []).length >= 2 && CALC_HINT.test(q.q)) ||
+const LABEL_RE = /\b(?:Tables?|Figures?|Slides?|Level|Ch|Chapter)\s*\d[\d.]*[a-d]?(?:[–-]\d[\d.]*)?/gi, NUM_RE = /\d[\d,]*(?:\.\d+)?/g, CALC_HINT = /[$%×÷]|percent|rate|ratio|total|average|cost|salary|pay\b|budget|wage|spread|midpoint|compa|how much|how many/i;
+const needsCalc = q => !!q && !q.hidden && (q.calc === true || ((String(q.q).replace(LABEL_RE, "").match(NUM_RE) || []).length >= 2 && CALC_HINT.test(q.q)) ||
   (Array.isArray(q.tbl) && q.tbl.flat().filter(x => /^[$€£]?\s?\d[\d,]*(\.\d+)?\s?%?$/.test(String(x).trim())).length >= 3));
 /* Safe evaluator (no eval): + − × ÷, parentheses, % (divide by 100), decimals, unary minus. NaN on bad input. */
 function calcEval(src) {
@@ -1851,15 +1852,18 @@ function runTests() {
   const b = validatePack(BUILTIN_RAW); ok(b.ok, "built-in pack validates" + (b.ok ? "" : ": " + b.errors.join("; ")));
   ok(b.pack.questions.length >= 200, "built-in has " + b.pack.questions.length + " questions");
   const pv = validatePack(PRACTICE_RAW); ok(pv.ok && !pv.warnings.length && pv.pack.questions.length === 59, "practice exam pack validates (" + pv.pack.questions.length + " questions" + (pv.warnings.length ? "; " + pv.warnings.join(" ") : "") + ")");
-  const iv = validatePack(IHRM_RAW); ok(iv.ok && !iv.warnings.length, "IHRM Ch 4–7 pack validates (" + iv.pack.questions.length + " questions" + (iv.ok ? "" : "; " + iv.errors.join(" ")) + (iv.warnings.length ? "; " + iv.warnings.join(" ") : "") + ")");
+  const iv = validatePack(IHRM_RAW); ok(iv.ok && !iv.warnings.length, "IHRM Exam 3 (Ch 8–10) pack validates (" + iv.pack.questions.length + " questions" + (iv.ok ? "" : "; " + iv.errors.join(" ")) + (iv.warnings.length ? "; " + iv.warnings.join(" ") : "") + ")");
   let gbad = 0; for (const g of IHRM_GENS) for (let k = 0; k < 60; k++) { const o = g.make(rngFor("g", k)); if (!o.q || o.a.length < 3 || new Set(o.a).size !== o.a.length) gbad++; }
   ok(!gbad, "IHRM lockpick calculators make 2+ distinct options (" + gbad + " bad)");
   { const v1 = calcEval("12.5% × 80 + (3 − 1) ÷ 4"), v2 = calcEval("−2×(3+"), flagged = iv.pack.questions.filter(q => needsCalc(q)).length, keep = PACK;
     PACK = iv.pack; const hcn = IHRM_GENS[2].make(rngFor("c", "c")), hq = { ...hcn, kind: "mc", id: "x" }; PACK = keep;
     const open = questionHTML(prepQ({ ...hq, kind: "mc" }, rngFor("c", "d")), null, null, null, true).includes("calcbox"), shut = questionHTML(prepQ(hq, rngFor("c", "d")), 0, 0, null, false).includes("calcbox");
-    ok(v1 === 10.5 && isNaN(v2) && open && !shut && flagged <= 5, `calculator: math works (${v1}), shows on number questions only while open, ${flagged} IHRM bank questions need it`); }
+    ok(v1 === 10.5 && isNaN(v2) && open && !shut && flagged <= 8, `calculator: math works (${v1}), shows on number questions only while open, ${flagged} IHRM bank questions need it`); }
   ok(iv.pack.tutor.length >= 15 && iv.pack.tutor.every(t => t.opts.every(o => o.why)), "Employer 1-1 sessions load with a why for every choice (" + iv.pack.tutor.length + ")");
   { const bad = iv.pack.questions.filter(q => q.kind === "mc" && q.a[0].length > 1.25 * Math.max(...q.a.slice(1).map(x => x.length))).length; ok(bad === 0, "no IHRM question gives the answer away by length (" + bad + " too long)"); }
+  { const qs = iv.pack.questions, by = re => qs.filter(q => re.test(q.q)).length, mt = qs.filter(q => /^MATCH:/.test(q.q));
+    const badT = mt.filter(q => !q.tbl || q.tbl.flat().some(x => x.length >= 60) || new Set(q.a).size !== q.a.length || q.a.length !== 4).length;
+    ok(mt.length >= 25 && by(/^LIST:/) >= 80 && by(/^FRAMEWORK:/) >= 10 && !badT, `framework drills: ${mt.length} matching, ${by(/^LIST:/)} listing, ${by(/^FRAMEWORK:/)} name-the-framework (${badT} bad tables)`); }
   ok(iv.pack.shortAnswers.length >= 12 && b.pack.shortAnswers.length >= 3, "short answers load (IHRM " + iv.pack.shortAnswers.length + ", Compensation " + b.pack.shortAnswers.length + ")");
   { let badSA = 0; for (const sa of iv.pack.shortAnswers) { const hi = gradeSA(sa, sa.model).score, lo = gradeSA(sa, "I am not sure about this one at all honestly, sorry about that.").score; if (hi < 0.7 || lo > 0) badSA++; }
     ok(!badSA, "every IHRM model answer grades Epic (≥70%) and a blank answer grades 0 (" + badSA + " bad)"); }
@@ -1935,7 +1939,8 @@ function demo(steps) {
   if (force === "boss" && S.map) { const tl = S.map.tiles[S.map.dungeons[2]]; tl.progress = tl.rooms.length - 1; S.event = null; startCombat(S, tl.id, rr(S)); }
   else if (force && S.map) { const tl = Object.values(S.map.tiles).find(x => x.type === force); if (tl) { tl.done = false; S.phase = "map"; S.combat = null; S.event = null; trigger(S, tl, rr(S));
     const fill = QS.get("fill"); if (fill === "essay" && S.event) essayAnswer(S, S.event, S.players[S.event.pid], PACK.shortAnswers[S.event.sa].model.split(" ").slice(0, 40).join(" "), rr(S));
-    if (QS.get("calcq") && S.event && S.event.q) S.event.q = prepQ({ ...IHRM_GENS[2].make(rr(S)), kind: "mc", c: "5", d: 3, id: "lockdemo" }, rr(S));
+    if (QS.get("matchq") && S.event && S.event.q) { const mq = PACK.questions.filter(q => q.tbl && /^MATCH:/.test(q.q))[Number(QS.get("matchq")) - 1]; if (mq) S.event.q = prepQ(mq, rr(S)); }
+    if (QS.get("calcq") && S.event && S.event.q) S.event.q = prepQ({ ...IHRM_GENS[2].make(rr(S)), kind: "mc", c: "9", d: 3, id: "lockdemo" }, rr(S));
     if (fill === "tutor" && S.event) tutorAnswer(S, S.event, S.players[S.event.pid], [0, 1, 4]);
     if (fill === "work" && S.event) { const pl = S.players[S.event.pid]; shiftAnswer(S, S.event, pl, { i: S.event.qs[0].ans }, rr(S)); }
     if (QS.get("gear")) S.order.forEach((p, i) => { equip(S.players[p], ["mouse2", "notes3", "mouse1"][i % 3]); equip(S.players[p], ["pro2", "cas3", "smart1"][i % 3]); }); } }

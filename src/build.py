@@ -2,7 +2,7 @@
 """Build Study Quest from the files in this folder.
 
 Writes the two published pages at the repo root:
-  index.html     Study Quest (default pack: MGMT 660 Ch 4-7)
+  index.html     Study Quest (default pack: MGMT 660 Exam 3, Ch 8-10)
   ib/index.html  International Business Quest (same game, own title, link, and save key)
 
 Usage:  python3 src/build.py [--copy-to DIR] [--no-cdn DIR]
