@@ -1015,6 +1015,18 @@ function hireText(h) { return h.desc || h.fx.map(f => HIRE_OPS[f.op].replace("N"
    NETWORK — host-authoritative over PeerJS. Clients send intents; the host sends state.
    ============================================================ */
 const PEER_PREFIX = "studyquest-";
+/* Relay list for players on different networks. Browser TURN credentials are always visible in the page source.
+   If usage looks wrong, replace the credential in the Metered dashboard. Over quota, the relay stops; there is no charge. */
+const TURN_AUTH = { username: "296db2975179b2e89ff8c193", credential: "TVXjNxxLHPYij8h7" };
+const ICE_SERVERS = [
+  { urls: "stun:stun.l.google.com:19302" },
+  { urls: "stun:stun.relay.metered.ca:80" },
+  { urls: "turn:global.relay.metered.ca:80", ...TURN_AUTH },
+  { urls: "turn:global.relay.metered.ca:80?transport=tcp", ...TURN_AUTH },
+  { urls: "turn:global.relay.metered.ca:443", ...TURN_AUTH },
+  { urls: "turns:global.relay.metered.ca:443?transport=tcp", ...TURN_AUTH },
+];
+const PEER_OPTS = { debug: 0, config: { iceServers: ICE_SERVERS } };
 const NET = { mode: null, peer: null, conns: new Map(), conn: null, code: "", offset: 0, status: "", tries: 0 };
 const CLIENT_TYPES = new Set(["PICK_GEAR", "PICK", "ROLL", "MOVE", "END_MOVE", "BUY", "SHOP_DONE", "USE", "ANSWER", "LIFELINE", "NEXT", "EVENT_DONE", "LEAVE"]);
 let S = null, ME = null;
@@ -1055,7 +1067,7 @@ function makeHostPeer() {
   if (!window.Peer) { NET.status = "offline"; render(); return; }
   if (NET.peer) try { NET.peer.destroy(); } catch (e) {}
   NET.status = "opening";
-  const peer = new Peer(PEER_PREFIX + NET.code.toLowerCase(), { debug: 0 }); NET.peer = peer;
+  const peer = new Peer(PEER_PREFIX + NET.code.toLowerCase(), PEER_OPTS); NET.peer = peer;
   peer.on("open", () => { NET.status = "open"; NET.tries = 0; render(); });
   peer.on("connection", onConn);
   peer.on("disconnected", () => { if (NET.peer === peer && !peer.destroyed) setTimeout(() => { try { peer.reconnect(); } catch (e) {} }, 1500); });
@@ -1108,7 +1120,7 @@ function startClient(code) {
   if (!window.Peer) { UI.err = "Online play could not load on this device. Use \"Play on one device\" instead."; return render(); }
   NET.mode = "client"; NET.code = code; S = null; ME = null; UI.err = ""; UI.lost = false; render();
   if (NET.peer) try { NET.peer.destroy(); } catch (e) {}
-  const peer = new Peer({ debug: 0 }); NET.peer = peer;
+  const peer = new Peer(PEER_OPTS); NET.peer = peer;
   peer.on("open", openConn);
   peer.on("disconnected", () => { if (!peer.destroyed) setTimeout(() => { try { peer.reconnect(); } catch (e) {} }, 1500); });
   peer.on("error", e => {
@@ -1117,7 +1129,7 @@ function startClient(code) {
     if (S) UI.lost = true; render();
   });
   clearTimeout(NET.timer);
-  NET.timer = setTimeout(() => { if (!S && !UI.err) { UI.err = "Can't reach the room. Some cellular networks block direct connections: try Wi-Fi, or play on one device."; render(); } }, 15000);
+  NET.timer = setTimeout(() => { if (NET.mode === "client" && !S && !UI.err) { UI.err = "Can't reach the host. Ask the host to keep the game open, then try again."; render(); } }, 15000);
 }
 function openConn() {
   const c = NET.peer.connect(PEER_PREFIX + NET.code.toLowerCase(), { reliable: true }); NET.conn = c;
@@ -1864,6 +1876,7 @@ function runTests() {
   const sv = validatePack(sneaky); ok(sv.ok && sv.warnings.length >= 2, "bad questions skipped with warnings (" + sv.warnings.length + ")");
   loadBuiltin();
   const part = QS.get("test") || "all", runs = [], errs = [];
+  ok(ICE_SERVERS.some(x => x.urls === "stun:stun.l.google.com:19302") && ICE_SERVERS.some(x => x.urls.startsWith("turns:") && x.urls.includes(":443") && x.username && x.credential) && PEER_OPTS.config.iceServers === ICE_SERVERS, "relay list has Google STUN and TURN over TLS on 443");
   if (part === "all" || part === "sim") for (let n = 1; n <= 6; n++) for (let k = 0; k < 34; k++) { try { runs.push({ n, ...simulate("T" + n + "x" + k, n, +(QS.get("acc") || 0.72)) }); } catch (e) { errs.push(n + "/" + k + ": " + e.message + " " + (e.stack || "").split("\n")[1]); } }
   out.soloLoss = runs.filter(x => x.n === 1 && !x.win).slice(0, 2).map(x => ({ turns: x.turns, combats: x.combats, d: x.dcleared, log: x.log }));
   ok(!errs.length, "autoplay without exceptions (" + runs.length + " runs)" + (errs.length ? " — " + errs.slice(0, 3).join(" | ") : ""));
