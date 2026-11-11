@@ -436,7 +436,7 @@ function viewFor(id) {
     v.meters = meterObj();
   }
   if (H.phase === "reflect") { v.mySubmitted = H.submitted.has(id); }
-  if (H.phase === "why") { v.title = DECISIONS[H.round].title; v.label = H.result.label; v.mySubmitted = H.whySubmitted.has(id); }
+  if (H.phase === "why") { v.title = DECISIONS[H.round].title; v.label = H.result.label; v.mySubmitted = H.whySubmitted.has(id); v.reaction = H.result.reaction; v.changes = changeList(H.result.before, H.result.after); }
   if (H.phase === "end") { v.ending = H.ending; v.meters = meterObj(); }
   return v;
 }
@@ -482,6 +482,12 @@ function startRound(r) {
 function nextAfterResult() {
   if (H.round + 1 < DECISIONS.length) startRound(H.round + 1);
   else { H.phase = "reflect"; if (DEMO) botWords(); broadcast(); renderHost(); }
+}
+function changeList(before, after) {
+  return METERS.map(([k, label]) => {
+    const dd = after[k] - before[k];
+    return `<li>${label}: ${before[k]} &rarr; ${after[k]} (${sign(dd)})</li>`;
+  }).join("");
 }
 function openWhy() {
   H.phase = "why"; H.whyWords = []; H.whySubmitted = new Set();
@@ -559,6 +565,9 @@ function renderHost() {
     html += `<div class="row"><span class="tag">Decision ${H.round + 1} of ${DECISIONS.length}</span></div>
       <h2>Why did the class choose: ${esc(H.result.label)}?</h2>
       <p>Students send one word for why this choice makes sense, or why it does not. Bigger bubble means more students sent that word.</p>
+      <div class="box"><p><b>What happened:</b> ${esc(H.result.reaction)}</p>
+        <p><b>Changes from this decision:</b></p><ul>${changeList(H.result.before, H.result.after)}</ul>
+        <p><b>Story so far:</b></p><ol>${H.history.map(h => `<li>${esc(h)}</li>`).join("")}</ol></div>
       <p class="muted">${H.whySubmitted.size} of ${H.players.size} sent a word.</p>
       ${bubbleCloud(H.whyWords, "why")}
       <p><button id="h-next">${H.round + 1 < DECISIONS.length ? "Next decision" : "Reflection"}</button></p>`;
@@ -677,6 +686,7 @@ function renderClient() {
       <p>${esc(r.reaction)}</p><p class="muted">${mine}</p></div>
       <p class="muted">Wait for the class discussion.</p>`;
   } else if (v.phase === "why") {
+    html += `<div class="box"><p>${esc(v.reaction)}</p><p><b>Changes:</b></p><ul>${v.changes}</ul></div>`;
     if (v.mySubmitted) {
       html += `<div class="box"><p class="big">Thanks.</p><p>Your word is on the projector.</p></div>`;
     } else {
