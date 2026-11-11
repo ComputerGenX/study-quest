@@ -42,7 +42,7 @@ input, textarea { font:inherit; width:100%; border:2.5px solid var(--line); bord
 .cloud { position:relative; margin:0 auto; border:2px dashed #bbb; border-radius:16px; background:#fff; }
 .bub { position:absolute; display:flex; flex-direction:column; align-items:center; justify-content:center; border:2.5px solid var(--line); border-radius:50%; text-align:center; white-space:nowrap; line-height:1; padding:4px; font-weight:bold; }
 .bub small { font-size:11px; font-weight:normal; margin-top:3px; }
-.right { background:#d9f0de; } .wrong { background:#f6d5d1; }
+.right { background:#d9f0de; } .wrong { background:#f6d5d1; } .why { background:#fff6d6; }
 .swot { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 ul { margin:6px 0 6px 20px; padding:0; }
 .err { color:#a4262c; font-weight:bold; }
@@ -370,7 +370,7 @@ const meterBars = m => METERS.map(([k, label]) => `
    ============================================================ */
 const H = { role: "host", code: "", peer: null, conns: new Map(), players: new Map(), phase: "lobby", round: -1,
   votes: new Map(), deadline: 0, result: null, meters: { ...START },
-  words: { right: [], wrong: [] }, submitted: new Set(), ending: "", ready: false, history: [] };
+  words: { right: [], wrong: [] }, submitted: new Set(), ending: "", ready: false, history: [], whyWords: [], whySubmitted: new Set() };
 const CL = { role: null, code: "", name: "", peer: null, conn: null, view: null, joined: false, err: "", localVote: null, deadline: 0, words: { right: "", wrong: "" } };
 const meterObj = () => ({ trust: H.meters.trust, family: H.meters.family, fair: H.meters.fair, savings: H.meters.savings });
 
@@ -404,6 +404,12 @@ function hostMsg(conn, m) {
     H.votes.set(conn.peer, m.opt);
     if (H.players.size > 0 && [...H.players.keys()].every(id => H.votes.has(id))) closeVote();
     else renderHost();
+  } else if (m.t === "why") {
+    if (H.phase !== "why" || !H.players.has(conn.peer) || H.whySubmitted.has(conn.peer)) return;
+    H.whySubmitted.add(conn.peer);
+    const w = cleanWord(m.word);
+    if (w) H.whyWords.push(w);
+    broadcast(); renderHost();
   } else if (m.t === "words") {
     if (H.phase !== "reflect" || !H.players.has(conn.peer) || H.submitted.has(conn.peer)) return;
     H.submitted.add(conn.peer);
@@ -430,6 +436,7 @@ function viewFor(id) {
     v.meters = meterObj();
   }
   if (H.phase === "reflect") { v.mySubmitted = H.submitted.has(id); }
+  if (H.phase === "why") { v.title = DECISIONS[H.round].title; v.label = H.result.label; v.mySubmitted = H.whySubmitted.has(id); }
   if (H.phase === "end") { v.ending = H.ending; v.meters = meterObj(); }
   return v;
 }
@@ -475,6 +482,14 @@ function startRound(r) {
 function nextAfterResult() {
   if (H.round + 1 < DECISIONS.length) startRound(H.round + 1);
   else { H.phase = "reflect"; if (DEMO) botWords(); broadcast(); renderHost(); }
+}
+function openWhy() {
+  H.phase = "why"; H.whyWords = []; H.whySubmitted = new Set();
+  if (DEMO) for (const id of H.players.keys()) if (id.startsWith("bot")) {
+    H.whySubmitted.add(id);
+    H.whyWords.push(["fair", "cost", "trust", "family"][Math.floor(Math.random() * 4)]);
+  }
+  broadcast(); renderHost();
 }
 function botWords() {
   const R = ["clear", "fair", "family", "honest", "careful", "fast", "planning", "support"];
@@ -539,6 +554,13 @@ function renderHost() {
       ${r.tieNote ? `<p class="muted">${esc(r.tieNote)}</p>` : ""}
       <div class="box"><p class="big">${esc(r.reaction)}</p><p><b>Teaching point:</b> ${esc(r.why)}</p></div>
       <div class="box">${meterBars(r.after)}</div>
+      <p><button id="h-why">Discuss why: open the word bubble</button></p>`;
+  } else if (H.phase === "why") {
+    html += `<div class="row"><span class="tag">Decision ${H.round + 1} of ${DECISIONS.length}</span></div>
+      <h2>Why did the class choose: ${esc(H.result.label)}?</h2>
+      <p>Students send one word for why this choice makes sense, or why it does not. Bigger bubble means more students sent that word.</p>
+      <p class="muted">${H.whySubmitted.size} of ${H.players.size} sent a word.</p>
+      ${bubbleCloud(H.whyWords, "why")}
       <p><button id="h-next">${H.round + 1 < DECISIONS.length ? "Next decision" : "Reflection"}</button></p>`;
   } else if (H.phase === "reflect") {
     html += `<h2>Reflection</h2><p>Students send one word for what went RIGHT and one for what went WRONG. Words appear live. Bigger bubble means said more often.</p>
@@ -564,6 +586,7 @@ function bindHost() {
   on("h-reset", hostReset);
   on("h-begin", () => startRound(0));
   on("h-close", closeVote);
+  on("h-why", openWhy);
   on("h-next", nextAfterResult);
   on("h-end", endGame);
   on("h-new", hostReset);
@@ -613,6 +636,13 @@ function clientWords() {
   CL.view = Object.assign({}, CL.view, { mySubmitted: true });
   renderClient();
 }
+function clientWhy() {
+  if (!CL.conn) return;
+  const word = (document.getElementById("w-why") || {}).value || "";
+  CL.conn.send({ t: "why", word });
+  CL.view = Object.assign({}, CL.view, { mySubmitted: true });
+  renderClient();
+}
 function renderClient() {
   const app = document.getElementById("app");
   if (CL.role !== "student") return;
@@ -645,7 +675,17 @@ function renderClient() {
     html += `<h2>${esc(v.title)}</h2>
       <div class="box"><p>The class chose:</p><p class="big">${esc(r.label)}</p>
       <p>${esc(r.reaction)}</p><p class="muted">${mine}</p></div>
-      <p class="muted">Wait for the next decision.</p>`;
+      <p class="muted">Wait for the class discussion.</p>`;
+  } else if (v.phase === "why") {
+    if (v.mySubmitted) {
+      html += `<div class="box"><p class="big">Thanks.</p><p>Your word is on the projector.</p></div>`;
+    } else {
+      html += `<h2>Why this choice?</h2>
+        <div class="box"><p>The class chose: <b>${esc(v.label)}</b></p>
+        <p><b>One word:</b> why does this choice make sense, or not?</p>
+        <input id="w-why" maxlength="20" placeholder="one word">
+        <p><button id="w-why-send">Send my word</button></p></div>`;
+    }
   } else if (v.phase === "reflect") {
     if (v.mySubmitted) {
       html += `<div class="box"><p class="big">Thanks.</p><p>Your words are on the projector.</p></div>`;
@@ -662,6 +702,8 @@ function renderClient() {
   document.querySelectorAll(".opt").forEach(b => b.onclick = () => clientVote(Number(b.dataset.i)));
   const ws = document.getElementById("w-send");
   if (ws) ws.onclick = clientWords;
+  const wy = document.getElementById("w-why-send");
+  if (wy) wy.onclick = clientWhy;
 }
 
 /* ============================================================
