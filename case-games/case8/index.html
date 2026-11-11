@@ -66,12 +66,13 @@ ul { margin:6px 0 6px 20px; padding:0; }
 
 /* ============================================================
    DATA — Case 8: Local and International? (Andresen, 2023)
-   Each decision has 4 options. d = [trust, family, savings] changes.
-   trust = Akiko's trust in the company; family = family stability;
-   savings = company cost control. Higher is better for all three.
+   Each decision has 4 options. d = [trust, family, fair, savings] changes.
+   trust = Akiko's trust (procedural justice); family = family stability;
+   fair = perceived fairness (equity); savings = company cost control.
+   Higher is better for all four.
    ============================================================ */
-const METERS = [["trust", "Akiko's trust in the company"], ["family", "Family stability"], ["savings", "Company savings"]];
-const START_METERS = [3, 3, 3];
+const METERS = [["trust", "Akiko's trust (procedural justice)"], ["family", "Family stability"], ["fair", "Perceived fairness (equity)"], ["savings", "Company savings"]];
+const START = { trust: 3, family: 3, fair: 3, savings: 3 };
 const METER_MAX = 6;
 const VOTE_SECONDS = 30;
 const COLORS = ["#e2574c", "#3d7fd6", "#d9a521", "#3f9a5c"];
@@ -79,134 +80,130 @@ const SHAPES = ["triangle", "diamond", "circle", "square"];
 
 const DECISIONS = [
   {
-    title: "Decision 1: The new policy",
+    title: "Decision 1: The explanation meeting",
     scene: "office",
-    prompt: "Puja offers Akiko a local international contract. What does Akiko do first?",
+    prompt: "Akiko is upset about the new policy. How does Puja handle the meeting?",
     options: [
-      { label: "Sign the local contract today", d: [-1, -1, 1],
-        reaction: "Akiko signs. She feels she had no real choice. The company saves money on her.",
-        why: "Fast for the employer. Employee needs for time and clear facts are not met." },
-      { label: "Ask for two weeks to talk with Hiroshi", d: [0, 1, 0],
-        reaction: "Puja agrees to wait. The offer stays open, but the policy will not change.",
-        why: "Family needs are part of the employee's package decision." },
-      { label: "Ask Puja to explain the policy in writing", d: [1, 0, 0],
-        reaction: "Puja sends a short memo. It gives the reason, but not the numbers Akiko needs.",
-        why: "Clear written facts build trust. Compare the two packages before a decision." },
-      { label: "Refuse and look for a job outside the company", d: [-2, -1, -1],
-        reaction: "Akiko starts a job search. The company may lose a talent it spent years growing.",
-        why: "Talent loss is a threat in the SWOT analysis." }
+      { label: "Explain the reasons, listen, and invite questions", d: [2, 0, 1, 0],
+        reaction: "Akiko says what worries her. Puja takes notes and promises a written answer.",
+        why: "Voice and explanation are procedural justice. People accept a hard outcome when the process feels fair." },
+      { label: "State the policy. Sign by Friday or leave the program.", d: [-2, -1, -1, 1],
+        reaction: "Akiko feels pressured. She leaves the room without asking more questions.",
+        why: "A closed process lowers trust. Staff read the outcome as unfair, even when pay is the same." },
+      { label: "Book a second meeting with the policy team to explain the cost basis", d: [1, 0, 1, -1],
+        reaction: "Akiko gets the cost facts. The budget team is not happy about the extra time.",
+        why: "Accurate information is a procedural justice rule. It makes the outcome easier to accept." },
+      { label: "Offer Akiko a private side deal and do not explain the policy", d: [0, 1, -2, -1],
+        reaction: "Akiko gets a better deal. Other staff hear about it and ask why they were not offered the same.",
+        why: "Inconsistent treatment breaks the consistency rule. Others see the outcome as unfair." }
     ]
   },
   {
-    title: "Decision 2: Evening at home",
-    scene: "home",
-    prompt: "Hiroshi and the two girls depend on this choice. How does the family plan the move?",
-    options: [
-      { label: "Ask the company for school and visa help", d: [1, 1, -1],
-        reaction: "Puja agrees to cover school and visa help under the settling-in allowance. Hiroshi relaxes.",
-        why: "Settling-in support is one of the costs in the local policy table." },
-      { label: "Accept the local contract and hope for a better job later", d: [0, -1, 1],
-        reaction: "The family moves with no plan. The girls start a new school with no support.",
-        why: "A weak family plan reduces the employee's willingness to move." },
-      { label: "Ask for a three-year expatriate contract", d: [-1, 0, 0],
-        reaction: "Puja says expatriate contracts now go only to critical positions. The answer is no.",
-        why: "The company limits expatriate packages to control cost. Employer and employee needs conflict." },
-      { label: "Stay in New Delhi on a local contract", d: [0, 0, 1],
-        reaction: "Akiko keeps her job in New Delhi on a local package. Hiroshi keeps looking for work.",
-        why: "Staying lowers cost, but it limits the employee's international career." }
-    ]
-  },
-  {
-    title: "Decision 3: Puja explains the change",
+    title: "Decision 2: Who is Akiko's referent?",
     scene: "policy",
-    prompt: "The company wants to cut costs. How does Puja present the local contract to all staff?",
+    prompt: "Akiko compares her package with others. Which referent person does she choose?",
     options: [
-      { label: "Show a side-by-side table of both packages, including what is lost", d: [2, 0, 0],
-        reaction: "Staff see the trade-offs. Some are upset, but they trust the process.",
-        why: "The case says the consequences must be explained. Transparency builds trust." },
-      { label: "Say it follows company rules. No discussion.", d: [-2, -1, 0],
-        reaction: "Akiko leaves the meeting silently. Staff talk in the hallway.",
-        why: "A closed message creates rumors and lowers trust." },
-      { label: "Offer a family support top-up for local contracts", d: [1, 1, -1],
-        reaction: "The top-up helps families. The budget team asks for a cap.",
-        why: "Targeted support helps employee needs. It must still fit the budget." },
-      { label: "Keep expatriate contracts for everyone", d: [1, 1, -2],
-        reaction: "Costs rise sharply. The board asks why the policy was changed at all.",
-        why: "This protects staff but removes the cost goal behind the new policy." }
+      { label: "Expatriates in New Delhi with full packages", d: [-1, 0, -2, 0],
+        reaction: "Akiko sees a large gap. Her inputs are the same, but her outcomes are much smaller.",
+        why: "Equity theory: people compare their outcome-to-input ratio with a referent. Expatriates are a strong referent for local international hires." },
+      { label: "Local colleagues in Singapore with the same job", d: [0, 0, 1, 1],
+        reaction: "The gap is small. Akiko feels the package is fair for the local market.",
+        why: "A local referent gives a fair comparison. This matches the host-country pay basis." },
+      { label: "Her own past expatriate package", d: [-1, 0, -1, 0],
+        reaction: "Akiko remembers the old package. She feels she is losing something.",
+        why: "A self-referent comparison (past self) can make a new package look poor, even if it is fair in the market." },
+      { label: "External new recruits hired locally", d: [0, 0, 1, 0],
+        reaction: "Akiko feels better about her package. She knows the recruits get less.",
+        why: "Comparing down raises perceived fairness for Akiko. The new recruits may compare up and feel unfair." }
     ]
   },
   {
-    title: "Decision 4: Pay for local international hires",
+    title: "Decision 3: Design the local international package",
     scene: "pay",
-    prompt: "Local international hires from China or India may earn less than expatriates. What pay rule does the company choose?",
+    prompt: "The company designs the package for local international hires. What does it include?",
     options: [
-      { label: "Host-country salary, plus a two-year cost-of-living allowance", d: [1, 1, 0],
-        reaction: "The base pay is fair. The allowance covers rent and school for a while.",
-        why: "This balances cost and fairness for the employee and the employer." },
-      { label: "Host-country salary only", d: [-2, -1, 2],
-        reaction: "Savings are high. Staff compare pay and feel unfair. A colleague asks why.",
-        why: "Low cost, but the employee's cost of living is not covered." },
-      { label: "Home-country salary for everyone", d: [1, 1, -2],
-        reaction: "Costs grow fast. The policy is hard to defend against the goal of cost control.",
-        why: "Fair to the employee, but it conflicts with the employer's cost needs." },
-      { label: "Lower pay by home country: China and India pay less", d: [-2, -1, 1],
-        reaction: "Staff see this as discrimination. The ethics team raises an alarm.",
-        why: "Equity and legal risk. Compare with the equity theory in the case questions." }
+      { label: "Host salary, settling-in, visa, medical, travel, and a two-year housing and school allowance", d: [1, 1, 1, 0],
+        reaction: "The package covers the costs of moving. Staff see the benefits as fair for the move.",
+        why: "This matches the local international policy table. It balances equity and cost." },
+      { label: "Host salary, settling-in, and travel only", d: [0, -1, 0, 1],
+        reaction: "Costs are low. Families struggle with school and housing.",
+        why: "Low cost, but the employee's inputs (family disruption, career risk) are high and the outcome is small." },
+      { label: "Home-country salary for local international hires", d: [1, 1, 1, -2],
+        reaction: "Staff feel equal to expatriates. The budget team asks how the policy now saves money.",
+        why: "Balance-sheet pay is very fair to the employee, but it removes the cost goal of the policy." },
+      { label: "The same package for external new recruits too", d: [0, 1, 1, -2],
+        reaction: "All new hires get support. Costs rise sharply across all hires.",
+        why: "This removes the gap between internal and external hires, but the cost is high." }
     ]
   },
   {
-    title: "Decision 5: Pension and social security",
-    scene: "pension",
-    prompt: "Local hires in some countries get no state pension. What should the company offer instead?",
+    title: "Decision 4: Rules for the future",
+    scene: "office",
+    prompt: "Akiko asks what happens if she wants to move again in three to five years. What does Puja promise?",
     options: [
-      { label: "A cash equivalent, plus a private pension option", d: [1, 1, 0],
-        reaction: "Staff can save for retirement. Some still feel they lose out.",
-        why: "Replaces the missing state pension without a full home-country plan." },
-      { label: "Nothing extra. Staff manage their own pension.", d: [-1, -1, 1],
-        reaction: "Staff who are unsure about their future start looking at other jobs.",
-        why: "Low cost, but it creates a retention risk." },
-      { label: "Keep staff in the home-country pension where the law allows", d: [1, 0, -1],
-        reaction: "The company keeps its promise where it can. The rules differ by country.",
-        why: "Good for staff, but it adds admin cost and legal checks." },
-      { label: "Pay the cash equivalent only in the final year", d: [-1, 0, 1],
-        reaction: "Staff feel the timing is unfair. The savings look good on paper only.",
-        why: "Saves cost now, but the employee's risk is high." }
+      { label: "Written rules: review dates, an appeal path, and the same rules for all staff", d: [2, 1, 1, 0],
+        reaction: "Akiko can plan. She trusts that the rules apply to others too.",
+        why: "Consistency and correctability are procedural justice rules. They support positive behavioral intentions: commitment and willingness to move again." },
+      { label: "The rules are final. No exceptions.", d: [-2, -1, -1, 1],
+        reaction: "Akiko feels trapped. She starts to plan an exit.",
+        why: "Low correctability lowers commitment." },
+      { label: "Each manager decides case by case", d: [-1, 0, -1, 0],
+        reaction: "The outcome depends on who the manager is. Akiko doubts the process.",
+        why: "Bias suppression is missing. Managers may treat people differently, and staff notice." },
+      { label: "A one-time exception for Akiko only", d: [1, 1, -2, -1],
+        reaction: "Akiko is pleased. Colleagues hear about it and feel treated unfairly.",
+        why: "This breaks consistency. Other employees compare themselves with Akiko and feel inequity." }
+    ]
+  },
+  {
+    title: "Decision 5: External recruits ask why",
+    scene: "pay",
+    prompt: "New local hires ask why local international hires get more support than they do. What does the company say?",
+    options: [
+      { label: "Explain the criteria openly, and open a review path for external hires", d: [1, 0, 1, 0],
+        reaction: "The recruits understand the criteria. Some still want the same support.",
+        why: "Explanation and voice help the recruits accept a policy that gives them less." },
+      { label: "They are external. Different rules apply. That is the end of it.", d: [-1, 0, -1, 1],
+        reaction: "The recruits feel unfairly treated. Some start looking for other jobs.",
+        why: "An equity gap with no explanation raises turnover risk." },
+      { label: "Give all local hires a retention bonus after two years", d: [1, 1, 1, -1],
+        reaction: "Everyone sees a path to reward. Costs rise a little.",
+        why: "Shared outcomes reduce the gap. The case lists a retention bonus as an optional item." },
+      { label: "Remove the extra support from internal hires so all staff are equal", d: [-1, -1, 1, 2],
+        reaction: "Costs fall. Internal hires feel their move is no longer worth it.",
+        why: "Leveling down makes outcomes equal, but it stops rewarding the input of moving abroad." }
     ]
   }
 ];
 
 const SUMMARY_HTML = `
 <div class="box">
-  <h2>Summary for the written answer</h2>
-  <p class="muted">Use this panel with the rubric. Your own answer must use the case facts.</p>
-  <h3>Question 1: SWOT of the local international policy</h3>
+  <h2>Comparing the three package groups</h2>
+  <div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:14px">
+    <tr style="text-align:left"><th style="border:1px solid #222;padding:4px">Group</th><th style="border:1px solid #222;padding:4px">Pay basis</th><th style="border:1px solid #222;padding:4px">Benefits</th><th style="border:1px solid #222;padding:4px">Pension and social security</th><th style="border:1px solid #222;padding:4px">Main referent and risk</th></tr>
+    <tr><td style="border:1px solid #222;padding:4px"><b>1. Expatriate contract</b><br>for career or job assignments (about 750 people)</td><td style="border:1px solid #222;padding:4px">Home-country salary (balance sheet)</td><td style="border:1px solid #222;padding:4px">Full package: housing, school, flights, relocation. Costs about three times base salary. Max 3 years.</td><td style="border:1px solid #222;padding:4px">Stays in home-country plans</td><td style="border:1px solid #222;padding:4px">Other expatriates and home colleagues. Costly; limited to critical positions.</td></tr>
+    <tr><td style="border:1px solid #222;padding:4px"><b>2. Local international contract</b><br>for internal staff who move, like Akiko</td><td style="border:1px solid #222;padding:4px">Host-country salary and incentives</td><td style="border:1px solid #222;padding:4px">Settling-in, medical check, visa, outward travel, one home trip in year one. Optional housing and school allowance (50% in year two), retention bonus.</td><td style="border:1px solid #222;padding:4px">Host-country plan; cash equivalent where no state pension is allowed</td><td style="border:1px solid #222;padding:4px">Expatriates in the same city (large gap) or local colleagues (small gap). Risk: staff feel the package is poorer.</td></tr>
+    <tr><td style="border:1px solid #222;padding:4px"><b>3. Local contract</b><br>for external international new recruits</td><td style="border:1px solid #222;padding:4px">Host-country salary</td><td style="border:1px solid #222;padding:4px">Local terms only. No mobility support.</td><td style="border:1px solid #222;padding:4px">Host-country plan</td><td style="border:1px solid #222;padding:4px">Local colleagues doing the same job. Risk: internal hires get more support for the same job.</td></tr>
+  </table></div>
+
+  <h3>Equity theory and the referent person</h3>
+  <p>Equity theory says people compare their outcome-to-input ratio with a referent. A referent can be a colleague, an expatriate, a past self, or a group. The gap between groups 1 and 2 is the largest source of unfairness. Group 2 staff carry high inputs (moving the family, a career change, a new language) and receive smaller outcomes than expatriates. Group 3 staff compare with group 2 colleagues in the same office and may feel the same gap.</p>
+
+  <h3>The role of procedural justice</h3>
+  <p>Procedural justice concerns how the decision is made. Key rules include consistency, bias suppression, accuracy, correctability, voice, and ethics. When the procedure is fair, people accept an outcome that is less favorable. Fair procedures also build positive behavioral intentions: commitment, willingness to move, and recommending the company. In the case, Akiko received little information before the decision. She felt the company did not manage expectations. The company can use the procedure itself to reduce the equity gap.</p>
+
+  <h3>Written answer support: SWOT and needs</h3>
   <div class="swot">
-    <div class="box"><b>Strengths</b><ul>
-      <li>Lower cost than expatriate packages</li>
-      <li>Lets more staff move across borders</li>
-      <li>Supports the "one company" idea</li></ul></div>
-    <div class="box"><b>Weaknesses</b><ul>
-      <li>Unclear rules for employees</li>
-      <li>Pension and social security gaps</li>
-      <li>Lower pay for some home countries</li></ul></div>
-    <div class="box"><b>Opportunities</b><ul>
-      <li>Large talent pool in Asia</li>
-      <li>Local hires who stay for years</li>
-      <li>A clear policy can attract staff</li></ul></div>
-    <div class="box"><b>Threats</b><ul>
-      <li>Talent loss to other employers</li>
-      <li>Families who refuse to move</li>
-      <li>Unfair-treatment claims</li></ul></div>
+    <div class="box"><b>Strengths</b><ul><li>Lower cost than expatriate packages</li><li>Lets more staff move across borders</li><li>Supports the "one company" idea</li></ul></div>
+    <div class="box"><b>Weaknesses</b><ul><li>Unclear rules for employees</li><li>Pension and social security gaps</li><li>Lower pay in some home countries</li></ul></div>
+    <div class="box"><b>Opportunities</b><ul><li>Large talent pool in Asia</li><li>Local hires who stay for years</li><li>A clear policy can attract staff</li></ul></div>
+    <div class="box"><b>Threats</b><ul><li>Talent loss to other employers</li><li>Families who refuse to move</li><li>Unfair-treatment claims</li></ul></div>
   </div>
-  <h3>Question 2: Employer and employee needs</h3>
   <div class="swot">
-    <div class="box"><b>Employer needs</b><ul>
-      <li>Control cost</li><li>Move talent flexibly</li><li>Fewer expatriate contracts</li></ul></div>
-    <div class="box"><b>Employee needs</b><ul>
-      <li>Fair pay for the cost of living</li><li>Family support: school, housing, visa</li>
-      <li>Pension clarity</li><li>Clear facts before a decision</li><li>A path back home or to a new role</li></ul></div>
+    <div class="box"><b>Employer needs</b><ul><li>Control cost</li><li>Move talent flexibly</li><li>Fewer expatriate contracts</li></ul></div>
+    <div class="box"><b>Employee needs</b><ul><li>Fair pay for the cost of living</li><li>Family support: school, housing, visa</li><li>Pension clarity</li><li>Clear facts before a decision</li><li>A path back home or to a new role</li></ul></div>
   </div>
-  <p><b>Elements to add to the package:</b> a written comparison of packages, family support rules, pension options by country, a return path, a review date for each contract, and an HR communication plan.</p>
+  <p><b>Elements to add to the package:</b> a written comparison of packages, family support rules, pension options by country, a return path, review dates, consistent rules, and an HR communication plan.</p>
 </div>`;
 
 /* ============================================================
@@ -357,10 +354,10 @@ const ROOM_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 const newCode = () => Array.from({ length: 4 }, () => ROOM_CHARS[Math.floor(Math.random() * ROOM_CHARS.length)]).join("");
 
 function endingText(m) {
-  if (m.trust >= 4 && m.family >= 3) return "Akiko stays on a local contract with a clear plan. Hiroshi finds work. The company keeps a talent.";
-  if (m.trust <= 2) return "Akiko leaves for a job outside the company. The company loses a talent and a trusted employee.";
-  if (m.family <= 2) return "Akiko stays, but the family struggles. The girls change school with no support.";
-  return "Akiko signs the local contract. The family is unsure, but the company saves money and the policy holds.";
+  if (m.trust <= 2) return "Akiko declines the move. The process felt closed, so she does not trust the offer.";
+  if (m.trust >= 4 && m.fair >= 4) return "Akiko moves. She trusts the process and sees the package as fair. She is likely to stay and recommend the company.";
+  if (m.fair <= 2) return "Akiko moves, but she compares herself with expatriates and feels underpaid. She plans to leave when the contract ends.";
+  return "Akiko moves on a local contract. She accepts the outcome, but she says the process could have been better.";
 }
 const sign = n => (n > 0 ? "+" : "") + n;
 const meterBars = m => METERS.map(([k, label]) => `
@@ -372,10 +369,10 @@ const meterBars = m => METERS.map(([k, label]) => `
    STATE
    ============================================================ */
 const H = { role: "host", code: "", peer: null, conns: new Map(), players: new Map(), phase: "lobby", round: -1,
-  votes: new Map(), deadline: 0, result: null, meters: { trust: START_METERS[0], family: START_METERS[1], savings: START_METERS[2] },
+  votes: new Map(), deadline: 0, result: null, meters: { ...START },
   words: { right: [], wrong: [] }, submitted: new Set(), ending: "", ready: false, history: [] };
 const CL = { role: null, code: "", name: "", peer: null, conn: null, view: null, joined: false, err: "", localVote: null, deadline: 0, words: { right: "", wrong: "" } };
-const meterObj = () => ({ trust: H.meters.trust, family: H.meters.family, savings: H.meters.savings });
+const meterObj = () => ({ trust: H.meters.trust, family: H.meters.family, fair: H.meters.fair, savings: H.meters.savings });
 
 /* ============================================================
    HOST
@@ -445,7 +442,8 @@ function applyResult(idx) {
   const d = DECISIONS[H.round].options[idx].d;
   H.meters.trust = clamp(H.meters.trust + d[0]);
   H.meters.family = clamp(H.meters.family + d[1]);
-  H.meters.savings = clamp(H.meters.savings + d[2]);
+  H.meters.fair = clamp(H.meters.fair + d[2]);
+  H.meters.savings = clamp(H.meters.savings + d[3]);
 }
 const clamp = n => Math.max(0, Math.min(METER_MAX, n));
 function closeVote() {
@@ -495,7 +493,7 @@ function addBots() {
 function hostReset() {
   for (const conn of H.conns.values()) { try { conn.close(); } catch (e) {} }
   H.conns = new Map(); H.players = new Map(); H.phase = "lobby"; H.round = -1; H.votes = new Map();
-  H.result = null; H.meters = { trust: START_METERS[0], family: START_METERS[1], savings: START_METERS[2] };
+  H.result = null; H.meters = { ...START };
   H.words = { right: [], wrong: [] }; H.submitted = new Set(); H.ending = ""; H.history = [];
   renderHost();
 }
@@ -518,6 +516,7 @@ function renderHost() {
       <button id="h-reset">Close room</button></p>`;
   } else if (H.phase === "brief") {
     html += `${stageSVG("office")}<div class="box"><p>Akiko is an expatriate in New Delhi. Her husband Hiroshi found work in Singapore, and the family may follow. HR says a move to Singapore now uses a local international contract, not an expatriate contract.</p>
+      <p><b>Discussion focus:</b> compare the three package groups, use equity theory and the referent person, and discuss procedural justice.</p>
       <p>The class votes on five decisions. Each vote takes about 30 seconds. The most popular choice moves the story forward.</p></div>
       <p><button id="h-begin">Begin decision 1</button></p>`;
   } else if (H.phase === "vote") {
