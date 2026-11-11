@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Case 8 Decisions</title>
+<meta name="description" content="Classroom vote game for Case 8: Local and International? Vote on each decision, then reflect with a word bubble.">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js"></script>
+<style>
+:root { --ink:#222; --paper:#fbf8f1; --muted:#6b6357; --line:#222; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.45 "Comic Sans MS","Chalkboard SE","Marker Felt",system-ui,sans-serif; padding:env(safe-area-inset-top) 16px 40px; }
+#app { max-width:980px; margin:0 auto; }
+h1 { font-size:28px; margin:12px 0 4px; }
+h2 { font-size:22px; margin:14px 0 6px; }
+p { margin:8px 0; }
+.muted { color:var(--muted); }
+.box { border:2.5px solid var(--line); border-radius:14px 18px 12px 16px; background:#fff; padding:14px 16px; margin:12px 0; }
+.row { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+.timer { font-size:44px; font-weight:bold; min-width:64px; text-align:right; }
+.code { font-size:44px; letter-spacing:6px; font-weight:bold; }
+button { font:inherit; font-weight:bold; border:2.5px solid var(--line); border-radius:12px 14px 10px 13px; background:#fff; padding:12px 18px; cursor:pointer; color:var(--ink); }
+button:hover { background:#f1ece0; }
+button:disabled { opacity:.45; cursor:default; }
+input, textarea { font:inherit; width:100%; border:2.5px solid var(--line); border-radius:10px; padding:10px; background:#fff; color:var(--ink); }
+.stage { width:100%; height:auto; background:#fff; border:2.5px solid var(--line); border-radius:14px 18px 12px 16px; }
+.opts { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+.opt { display:flex; align-items:center; gap:12px; text-align:left; color:#fff; border:2.5px solid var(--line); border-radius:14px 12px 16px 12px; padding:14px; min-height:74px; font-size:18px; font-weight:bold; width:100%; }
+.opt svg { flex:0 0 auto; }
+.opt.sel { outline:5px solid var(--ink); outline-offset:2px; }
+.opt .bar { position:absolute; }
+.hostcard { position:relative; overflow:hidden; color:#fff; border:2.5px solid var(--line); border-radius:14px 12px 16px 12px; padding:14px; min-height:84px; font-size:18px; font-weight:bold; display:flex; align-items:center; gap:12px; }
+.hostcard .fill { position:absolute; left:0; bottom:0; height:6px; background:#fff; }
+.winner { outline:5px solid var(--ink); outline-offset:3px; }
+.big { font-size:24px; font-weight:bold; }
+.tag { display:inline-block; background:var(--ink); color:#fff; border-radius:8px; padding:2px 10px; font-size:14px; }
+.meter { display:grid; grid-template-columns:1fr 2fr 60px; gap:10px; align-items:center; margin:6px 0; }
+.pips { display:flex; gap:4px; }
+.pip { width:18px; height:18px; border:2px solid var(--line); border-radius:50%; background:#fff; }
+.pip.on { background:var(--ink); }
+.cols { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.cloud { position:relative; margin:0 auto; border:2px dashed #bbb; border-radius:16px; background:#fff; }
+.bub { position:absolute; display:flex; flex-direction:column; align-items:center; justify-content:center; border:2.5px solid var(--line); border-radius:50%; text-align:center; white-space:nowrap; line-height:1; padding:4px; font-weight:bold; }
+.bub small { font-size:11px; font-weight:normal; margin-top:3px; }
+.right { background:#d9f0de; } .wrong { background:#f6d5d1; }
+.swot { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+ul { margin:6px 0 6px 20px; padding:0; }
+.err { color:#a4262c; font-weight:bold; }
+.name-list { columns:2; }
+@media (max-width:640px) { .opts, .cols, .swot { grid-template-columns:1fr; } .timer { font-size:34px; } .code { font-size:34px; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="rough" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="4" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="4"/>
+    </filter>
+  </defs>
+</svg>
+<div id="app"></div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   DATA — Case 8: Local and International? (Andresen, 2023)
+   Each decision has 4 options. d = [trust, family, savings] changes.
+   trust = Akiko's trust in the company; family = family stability;
+   savings = company cost control. Higher is better for all three.
+   ============================================================ */
+const METERS = [["trust", "Akiko's trust in the company"], ["family", "Family stability"], ["savings", "Company savings"]];
+const START_METERS = [3, 3, 3];
+const METER_MAX = 6;
+const VOTE_SECONDS = 30;
+const COLORS = ["#e2574c", "#3d7fd6", "#d9a521", "#3f9a5c"];
+const SHAPES = ["triangle", "diamond", "circle", "square"];
+
+const DECISIONS = [
+  {
+    title: "Decision 1: The new policy",
+    scene: "office",
+    prompt: "Puja offers Akiko a local international contract. What does Akiko do first?",
+    options: [
+      { label: "Sign the local contract today", d: [-1, -1, 1],
+        reaction: "Akiko signs. She feels she had no real choice. The company saves money on her.",
+        why: "Fast for the employer. Employee needs for time and clear facts are not met." },
+      { label: "Ask for two weeks to talk with Hiroshi", d: [0, 1, 0],
+        reaction: "Puja agrees to wait. The offer stays open, but the policy will not change.",
+        why: "Family needs are part of the employee's package decision." },
+      { label: "Ask Puja to explain the policy in writing", d: [1, 0, 0],
+        reaction: "Puja sends a short memo. It gives the reason, but not the numbers Akiko needs.",
+        why: "Clear written facts build trust. Compare the two packages before a decision." },
+      { label: "Refuse and look for a job outside the company", d: [-2, -1, -1],
+        reaction: "Akiko starts a job search. The company may lose a talent it spent years growing.",
+        why: "Talent loss is a threat in the SWOT analysis." }
+    ]
+  },
+  {
+    title: "Decision 2: Evening at home",
+    scene: "home",
+    prompt: "Hiroshi and the two girls depend on this choice. How does the family plan the move?",
+    options: [
+      { label: "Ask the company for school and visa help", d: [1, 1, -1],
+        reaction: "Puja agrees to cover school and visa help under the settling-in allowance. Hiroshi relaxes.",
+        why: "Settling-in support is one of the costs in the local policy table." },
+      { label: "Accept the local contract and hope for a better job later", d: [0, -1, 1],
+        reaction: "The family moves with no plan. The girls start a new school with no support.",
+        why: "A weak family plan reduces the employee's willingness to move." },
+      { label: "Ask for a three-year expatriate contract", d: [-1, 0, 0],
+        reaction: "Puja says expatriate contracts now go only to critical positions. The answer is no.",
+        why: "The company limits expatriate packages to control cost. Employer and employee needs conflict." },
+      { label: "Stay in New Delhi on a local contract", d: [0, 0, 1],
+        reaction: "Akiko keeps her job in New Delhi on a local package. Hiroshi keeps looking for work.",
+        why: "Staying lowers cost, but it limits the employee's international career." }
+    ]
+  },
+  {
+    title: "Decision 3: Puja explains the change",
+    scene: "policy",
+    prompt: "The company wants to cut costs. How does Puja present the local contract to all staff?",
+    options: [
+      { label: "Show a side-by-side table of both packages, including what is lost", d: [2, 0, 0],
+        reaction: "Staff see the trade-offs. Some are upset, but they trust the process.",
+        why: "The case says the consequences must be explained. Transparency builds trust." },
+      { label: "Say it follows company rules. No discussion.", d: [-2, -1, 0],
+        reaction: "Akiko leaves the meeting silently. Staff talk in the hallway.",
+        why: "A closed message creates rumors and lowers trust." },
+      { label: "Offer a family support top-up for local contracts", d: [1, 1, -1],
+        reaction: "The top-up helps families. The budget team asks for a cap.",
+        why: "Targeted support helps employee needs. It must still fit the budget." },
+      { label: "Keep expatriate contracts for everyone", d: [1, 1, -2],
+        reaction: "Costs rise sharply. The board asks why the policy was changed at all.",
+        why: "This protects staff but removes the cost goal behind the new policy." }
+    ]
+  },
+  {
+    title: "Decision 4: Pay for local international hires",
+    scene: "pay",
+    prompt: "Local international hires from China or India may earn less than expatriates. What pay rule does the company choose?",
+    options: [
+      { label: "Host-country salary, plus a two-year cost-of-living allowance", d: [1, 1, 0],
+        reaction: "The base pay is fair. The allowance covers rent and school for a while.",
+        why: "This balances cost and fairness for the employee and the employer." },
+      { label: "Host-country salary only", d: [-2, -1, 2],
+        reaction: "Savings are high. Staff compare pay and feel unfair. A colleague asks why.",
+        why: "Low cost, but the employee's cost of living is not covered." },
+      { label: "Home-country salary for everyone", d: [1, 1, -2],
+        reaction: "Costs grow fast. The policy is hard to defend against the goal of cost control.",
+        why: "Fair to the employee, but it conflicts with the employer's cost needs." },
+      { label: "Lower pay by home country: China and India pay less", d: [-2, -1, 1],
+        reaction: "Staff see this as discrimination. The ethics team raises an alarm.",
+        why: "Equity and legal risk. Compare with the equity theory in the case questions." }
+    ]
+  },
+  {
+    title: "Decision 5: Pension and social security",
+    scene: "pension",
+    prompt: "Local hires in some countries get no state pension. What should the company offer instead?",
+    options: [
+      { label: "A cash equivalent, plus a private pension option", d: [1, 1, 0],
+        reaction: "Staff can save for retirement. Some still feel they lose out.",
+        why: "Replaces the missing state pension without a full home-country plan." },
+      { label: "Nothing extra. Staff manage their own pension.", d: [-1, -1, 1],
+        reaction: "Staff who are unsure about their future start looking at other jobs.",
+        why: "Low cost, but it creates a retention risk." },
+      { label: "Keep staff in the home-country pension where the law allows", d: [1, 0, -1],
+        reaction: "The company keeps its promise where it can. The rules differ by country.",
+        why: "Good for staff, but it adds admin cost and legal checks." },
+      { label: "Pay the cash equivalent only in the final year", d: [-1, 0, 1],
+        reaction: "Staff feel the timing is unfair. The savings look good on paper only.",
+        why: "Saves cost now, but the employee's risk is high." }
+    ]
+  }
+];
+
+const SUMMARY_HTML = `
+<div class="box">
+  <h2>Summary for the written answer</h2>
+  <p class="muted">Use this panel with the rubric. Your own answer must use the case facts.</p>
+  <h3>Question 1: SWOT of the local international policy</h3>
+  <div class="swot">
+    <div class="box"><b>Strengths</b><ul>
+      <li>Lower cost than expatriate packages</li>
+      <li>Lets more staff move across borders</li>
+      <li>Supports the "one company" idea</li></ul></div>
+    <div class="box"><b>Weaknesses</b><ul>
+      <li>Unclear rules for employees</li>
+      <li>Pension and social security gaps</li>
+      <li>Lower pay for some home countries</li></ul></div>
+    <div class="box"><b>Opportunities</b><ul>
+      <li>Large talent pool in Asia</li>
+      <li>Local hires who stay for years</li>
+      <li>A clear policy can attract staff</li></ul></div>
+    <div class="box"><b>Threats</b><ul>
+      <li>Talent loss to other employers</li>
+      <li>Families who refuse to move</li>
+      <li>Unfair-treatment claims</li></ul></div>
+  </div>
+  <h3>Question 2: Employer and employee needs</h3>
+  <div class="swot">
+    <div class="box"><b>Employer needs</b><ul>
+      <li>Control cost</li><li>Move talent flexibly</li><li>Fewer expatriate contracts</li></ul></div>
+    <div class="box"><b>Employee needs</b><ul>
+      <li>Fair pay for the cost of living</li><li>Family support: school, housing, visa</li>
+      <li>Pension clarity</li><li>Clear facts before a decision</li><li>A path back home or to a new role</li></ul></div>
+  </div>
+  <p><b>Elements to add to the package:</b> a written comparison of packages, family support rules, pension options by country, a return path, a review date for each contract, and an HR communication plan.</p>
+</div>`;
+
+/* ============================================================
+   DOODLE STAGE — rough SVG figures (ink on paper)
+   ============================================================ */
+const INK = "#222";
+function figure(x, ground, s, o = {}) {
+  const hairs = {
+    bun: `<circle cx="0" cy="-94" r="9" fill="#444"/><path d="M-17,-72 Q-19,-100 0,-100 Q19,-100 17,-72 Q0,-84 -17,-72Z" fill="#444"/>`,
+    bob: `<path d="M-20,-70 Q-22,-104 0,-104 Q22,-104 20,-70 L22,-46 L15,-48 L14,-66 Q0,-80 -14,-66 L-15,-48 L-22,-46Z" fill="#444"/>`,
+    short: `<path d="M-16,-74 Q-14,-98 2,-98 Q16,-96 16,-72 Q4,-84 -16,-74Z" fill="#444"/>`
+  };
+  const mouths = {
+    smile: "M-6,-62 Q0,-56 6,-62",
+    flat: "M-5,-60 L5,-60",
+    worry: "M-6,-58 Q0,-64 6,-58"
+  };
+  const glasses = o.glasses
+    ? `<circle cx="-6" cy="-70" r="6" fill="none"/><circle cx="6" cy="-70" r="6" fill="none"/>`
+    : "";
+  const blazer = o.blazer ? `<path d="M-6,-52 L0,-30 L6,-52" fill="none"/>` : "";
+  return `<g transform="translate(${x} ${ground - 44 * s}) scale(${s})">
+    <path d="M-10,12 L-12,44 M10,12 L12,44" fill="none"/>
+    <path d="M-14,44 L-8,44 M8,44 L14,44" fill="none"/>
+    <path d="M-22,-52 Q0,-58 22,-52 L26,12 L-26,12Z" fill="${o.shirt || "#fff"}"/>
+    ${blazer}
+    <path d="M-22,-48 Q-34,-20 -28,6 M22,-48 Q34,-20 28,6" fill="none"/>
+    ${(o.hair === "short") ? "" : hairs[o.hair || "short"]}
+    <circle cx="0" cy="-70" r="15" fill="#fff"/>
+    ${(o.hair === "short") ? hairs.short : ""}
+    <circle cx="-5" cy="-70" r="1.8" fill="${INK}" stroke="none"/>
+    <circle cx="5" cy="-70" r="1.8" fill="${INK}" stroke="none"/>
+    ${glasses}
+    <path d="${mouths[o.mood || "smile"]}" fill="none"/>
+  </g>`;
+}
+function building(x, y, w, h, label) {
+  let win = "";
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++) win += `<rect x="${x + 14 + c * ((w - 28) / 4)}" y="${y + 14 + r * 38}" width="18" height="18" fill="#fff"/>`;
+  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#fff"/>${win}<text x="${x + w / 2}" y="${y + h + 22}" text-anchor="middle" font-size="16" fill="${INK}" stroke="none" font-weight="bold">${label}</text>`;
+}
+const SCENES = {
+  office: () => `
+    <rect x="30" y="30" width="200" height="120" fill="#fff"/><path d="M30,190 L230,190" fill="none"/>
+    <path d="M360,200 L700,200 M380,200 L380,250 M680,200 L680,250" fill="none"/>
+    <rect x="350" y="170" width="16" height="10" fill="#fff"/>
+    ${figure(250, 250, 1.5, { hair: "bun", glasses: true, blazer: true, shirt: "#fff", mood: "smile" })}
+    ${figure(560, 250, 1.5, { hair: "bob", mood: "worry" })}
+    <path d="M0,250 L800,250" fill="none"/>`,
+  home: () => `
+    <rect x="600" y="30" width="150" height="110" fill="#fff"/><path d="M675,30 L675,140 M600,85 L750,85" fill="none"/>
+    <path d="M90,200 L730,200 M120,200 L120,250 M700,200 L700,250" fill="none"/>
+    ${figure(230, 250, 1.4, { hair: "short", shirt: "#fff", mood: "flat" })}
+    ${figure(400, 250, 1.4, { hair: "bob", mood: "worry" })}
+    ${figure(580, 250, 0.8, { hair: "bob", mood: "smile" })}
+    ${figure(660, 250, 0.8, { hair: "bob", mood: "worry" })}`,
+  policy: () => `
+    <rect x="540" y="40" width="220" height="170" fill="#fff"/>
+    <path d="M580,190 L580,120 M620,190 L620,90 M660,190 L660,140 M700,190 L700,70" fill="none" stroke-width="10"/>
+    <path d="M30,250 L780,250" fill="none"/>
+    ${figure(260, 250, 1.5, { hair: "bun", glasses: true, blazer: true, mood: "smile" })}
+    ${figure(450, 250, 1.5, { hair: "bob", mood: "flat" })}`,
+  pay: () => `
+    <circle cx="200" cy="90" r="34" fill="#fff"/><text x="200" y="102" text-anchor="middle" font-size="34" fill="${INK}" stroke="none" font-weight="bold">$</text>
+    <circle cx="640" cy="80" r="34" fill="#fff"/><text x="640" y="92" text-anchor="middle" font-size="34" fill="${INK}" stroke="none" font-weight="bold">$</text>
+    <path d="M30,250 L780,250" fill="none"/>
+    ${figure(290, 250, 1.5, { hair: "bun", glasses: true, blazer: true, mood: "smile" })}
+    ${figure(530, 250, 1.5, { hair: "short", shirt: "#cfe3ff", mood: "flat" })}`,
+  pension: () => `
+    <rect x="590" y="150" width="90" height="100" fill="#fff"/><path d="M590,170 L680,170" fill="none"/>
+    <text x="635" y="220" text-anchor="middle" font-size="30" fill="${INK}" stroke="none" font-weight="bold">%</text>
+    <path d="M30,250 L780,250" fill="none"/>
+    ${figure(270, 250, 1.5, { hair: "bun", glasses: true, blazer: true, mood: "smile" })}
+    ${figure(470, 250, 1.5, { hair: "bob", mood: "worry" })}`
+};
+function stageSVG(scene) {
+  const draw = (SCENES[scene] || SCENES.office)();
+  return `<svg class="stage" viewBox="0 0 800 280" role="img" aria-label="Doodle scene">
+    <g filter="url(#rough)" fill="none" stroke="${INK}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${draw}</g>
+  </svg>`;
+}
+function shapeSVG(i, size = 34) {
+  const shapes = {
+    triangle: `<polygon points="16,3 30,29 2,29" fill="#fff"/>`,
+    diamond: `<polygon points="16,2 30,16 16,30 2,16" fill="#fff"/>`,
+    circle: `<circle cx="16" cy="16" r="13" fill="#fff"/>`,
+    square: `<rect x="4" y="4" width="24" height="24" fill="#fff"/>`
+  };
+  return `<svg width="${size}" height="${size}" viewBox="0 0 32 32" aria-hidden="true" stroke="#222" stroke-width="2">${shapes[SHAPES[i]]}</svg>`;
+}
+
+/* ============================================================
+   WORD BUBBLES
+   ============================================================ */
+const STOP = new Set(["the", "a", "an", "and", "or", "of", "to", "in", "on", "for", "is", "it", "was", "be", "with", "that", "this", "at", "by", "from", "as", "i", "we", "they", "my", "our", "not", "no"]);
+function cleanWord(s) {
+  const first = String(s || "").trim().toLowerCase().split(/\s+/)[0] || "";
+  const t = first.replace(/[^a-z'-]/g, "");
+  if (t.length < 2 || t.length > 20 || STOP.has(t)) return "";
+  return t;
+}
+function tally(words) {
+  const m = new Map();
+  for (const w of words) m.set(w, (m.get(w) || 0) + 1);
+  return [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 30);
+}
+function bubbleCloud(words, cls) {
+  const entries = tally(words);
+  if (!entries.length) return `<p class="muted">No words yet.</p>`;
+  const max = entries[0][1];
+  const W = 420, Hh = 300, placed = [];
+  let html = "";
+  for (const [w, c] of entries) {
+    const fs = 14 + Math.round((c / max) * 34);
+    const d = Math.round(Math.max(fs * w.length * 0.6, fs * 1.8) + 14);
+    let x = 0, y = 0, ok = false;
+    for (let k = 0; k < 1200 && !ok; k++) {
+      const a = k * 0.55, r = k * 1.9;
+      x = W / 2 + r * Math.cos(a) - d / 2;
+      y = Hh / 2 + r * Math.sin(a) - d / 2;
+      ok = x >= 0 && y >= 0 && x + d <= W && y + d <= Hh &&
+        placed.every(p => Math.hypot((p.x + p.d / 2) - (x + d / 2), (p.y + p.d / 2) - (y + d / 2)) >= (p.d + d) / 2 - 4);
+    }
+    if (!ok) continue;
+    placed.push({ x, y, d });
+    html += `<div class="bub ${cls}" title="${esc(w)}: ${c}" style="left:${x}px;top:${y}px;width:${d}px;height:${d}px;font-size:${fs}px">${esc(w)}<small>${c}</small></div>`;
+  }
+  return `<div class="cloud" style="width:${W}px;max-width:100%;height:${Hh}px">${html}</div>`;
+}
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const DEMO = /demo/.test(location.search);
+const PREFIX = "case8-";
+const TURN_AUTH = { username: "296db2975179b2e89ff8c193", credential: "TVXjNxxLHPYij8h7" };
+const ICE = [
+  { urls: "stun:stun.l.google.com:19302" },
+  { urls: "stun:stun.relay.metered.ca:80" },
+  { urls: "turn:global.relay.metered.ca:80", ...TURN_AUTH },
+  { urls: "turn:global.relay.metered.ca:80?transport=tcp", ...TURN_AUTH },
+  { urls: "turn:global.relay.metered.ca:443", ...TURN_AUTH },
+  { urls: "turns:global.relay.metered.ca:443?transport=tcp", ...TURN_AUTH }
+];
+const PEER_OPTS = { debug: 0, config: { iceServers: ICE } };
+const ROOM_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+const newCode = () => Array.from({ length: 4 }, () => ROOM_CHARS[Math.floor(Math.random() * ROOM_CHARS.length)]).join("");
+
+function endingText(m) {
+  if (m.trust >= 4 && m.family >= 3) return "Akiko stays on a local contract with a clear plan. Hiroshi finds work. The company keeps a talent.";
+  if (m.trust <= 2) return "Akiko leaves for a job outside the company. The company loses a talent and a trusted employee.";
+  if (m.family <= 2) return "Akiko stays, but the family struggles. The girls change school with no support.";
+  return "Akiko signs the local contract. The family is unsure, but the company saves money and the policy holds.";
+}
+const sign = n => (n > 0 ? "+" : "") + n;
+const meterBars = m => METERS.map(([k, label]) => `
+  <div class="meter"><span>${label}</span>
+  <div class="pips">${Array.from({ length: METER_MAX }, (_, i) => `<span class="pip ${i < m[k] ? "on" : ""}"></span>`).join("")}</div>
+  <span>${m[k]}/${METER_MAX}</span></div>`).join("");
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const H = { role: "host", code: "", peer: null, conns: new Map(), players: new Map(), phase: "lobby", round: -1,
+  votes: new Map(), deadline: 0, result: null, meters: { trust: START_METERS[0], family: START_METERS[1], savings: START_METERS[2] },
+  words: { right: [], wrong: [] }, submitted: new Set(), ending: "", ready: false, history: [] };
+const CL = { role: null, code: "", name: "", peer: null, conn: null, view: null, joined: false, err: "", localVote: null, deadline: 0, words: { right: "", wrong: "" } };
+const meterObj = () => ({ trust: H.meters.trust, family: H.meters.family, savings: H.meters.savings });
+
+/* ============================================================
+   HOST
+   ============================================================ */
+function hostStart(code) {
+  H.code = code;
+  const peer = new Peer(PREFIX + code.toLowerCase(), PEER_OPTS);
+  H.peer = peer;
+  peer.on("open", () => { H.ready = true; renderHost(); });
+  peer.on("connection", conn => {
+    H.conns.set(conn.peer, conn);
+    conn.on("data", m => hostMsg(conn, m));
+    conn.on("close", () => { H.conns.delete(conn.peer); renderHost(); });
+  });
+  peer.on("error", e => {
+    if (e.type === "unavailable-id") { H.peer = null; hostStart(newCode()); }
+    else { H.error = "Network error: " + e.type; renderHost(); }
+  });
+}
+function hostMsg(conn, m) {
+  if (!m || typeof m !== "object") return;
+  if (m.t === "join") {
+    const name = String(m.name || "Student").replace(/[<>]/g, "").slice(0, 20) || "Student";
+    H.players.set(conn.peer, { name });
+    broadcast(); renderHost();
+  } else if (m.t === "vote") {
+    if (H.phase !== "vote" || m.round !== H.round || !H.players.has(conn.peer)) return;
+    if (!Number.isInteger(m.opt) || m.opt < 0 || m.opt > 3) return;
+    H.votes.set(conn.peer, m.opt);
+    if (H.players.size > 0 && [...H.players.keys()].every(id => H.votes.has(id))) closeVote();
+    else renderHost();
+  } else if (m.t === "words") {
+    if (H.phase !== "reflect" || !H.players.has(conn.peer) || H.submitted.has(conn.peer)) return;
+    H.submitted.add(conn.peer);
+    const r = cleanWord(m.right), w = cleanWord(m.wrong);
+    if (r) H.words.right.push(r);
+    if (w) H.words.wrong.push(w);
+    broadcast(); renderHost();
+  }
+}
+function viewFor(id) {
+  const v = { phase: H.phase, round: H.round, total: DECISIONS.length, players: H.players.size };
+  if (H.phase === "lobby" || H.phase === "brief") { v.names = [...H.players.values()].map(p => p.name); }
+  if (H.phase === "vote") {
+    const d = DECISIONS[H.round];
+    v.title = d.title; v.prompt = d.prompt; v.scene = d.scene;
+    v.options = d.options.map(o => o.label);
+    v.remaining = Math.max(0, H.deadline - Date.now());
+    v.myVote = H.votes.has(id) ? H.votes.get(id) : null;
+  }
+  if (H.phase === "result") {
+    const d = DECISIONS[H.round];
+    v.title = d.title; v.options = d.options.map(o => o.label);
+    v.result = H.result; v.myVote = H.votes.has(id) ? H.votes.get(id) : null;
+    v.meters = meterObj();
+  }
+  if (H.phase === "reflect") { v.mySubmitted = H.submitted.has(id); }
+  if (H.phase === "end") { v.ending = H.ending; v.meters = meterObj(); }
+  return v;
+}
+function broadcast() {
+  for (const [id, conn] of H.conns) {
+    if (conn.open) { try { conn.send({ t: "view", v: viewFor(id) }); } catch (e) { /* ignore */ } }
+  }
+}
+function applyResult(idx) {
+  const d = DECISIONS[H.round].options[idx].d;
+  H.meters.trust = clamp(H.meters.trust + d[0]);
+  H.meters.family = clamp(H.meters.family + d[1]);
+  H.meters.savings = clamp(H.meters.savings + d[2]);
+}
+const clamp = n => Math.max(0, Math.min(METER_MAX, n));
+function closeVote() {
+  if (H.phase !== "vote") return;
+  const d = DECISIONS[H.round];
+  const counts = d.options.map(() => 0);
+  for (const v of H.votes.values()) counts[v]++;
+  const max = Math.max(...counts);
+  const tops = counts.map((c, i) => (c === max ? i : -1)).filter(i => i >= 0);
+  let winner = tops[0], tieNote = "";
+  if (max === 0) { winner = 0; tieNote = "No votes. The class uses option A."; }
+  else if (tops.length > 1) { winner = tops[Math.floor(Math.random() * tops.length)]; tieNote = "Tie. The game picked one of the tied options by chance."; }
+  const before = meterObj();
+  applyResult(winner);
+  const opt = d.options[winner];
+  H.result = { counts, winner, tieNote, reaction: opt.reaction, why: opt.why, label: opt.label, before, after: meterObj() };
+  H.history.push(d.title.replace(/^Decision \d+: /, "") + ": " + opt.label);
+  H.phase = "result";
+  broadcast(); renderHost();
+}
+function startRound(r) {
+  H.round = r; H.phase = "vote"; H.votes = new Map();
+  H.deadline = Date.now() + VOTE_SECONDS * 1000;
+  if (DEMO) for (const id of H.players.keys()) if (id.startsWith("bot")) H.votes.set(id, Math.floor(Math.random() * 4));
+  broadcast(); renderHost();
+  // Demo bots answer at once, so pause before the vote closes for the host to see it.
+  if (H.players.size > 0 && [...H.players.keys()].every(id => H.votes.has(id))) setTimeout(closeVote, 3000);
+}
+function nextAfterResult() {
+  if (H.round + 1 < DECISIONS.length) startRound(H.round + 1);
+  else { H.phase = "reflect"; if (DEMO) botWords(); broadcast(); renderHost(); }
+}
+function botWords() {
+  const R = ["clear", "fair", "family", "honest", "careful", "fast", "planning", "support"];
+  const W = ["confusing", "rushed", "unfair", "silent", "cost", "trust", "pension", "stress"];
+  for (const id of H.players.keys()) if (id.startsWith("bot") && !H.submitted.has(id)) {
+    H.submitted.add(id);
+    H.words.right.push(R[Math.floor(Math.random() * R.length)]);
+    H.words.wrong.push(W[Math.floor(Math.random() * W.length)]);
+  }
+}
+function endGame() { H.ending = endingText(meterObj()); H.phase = "end"; broadcast(); renderHost(); }
+function addBots() {
+  for (let i = 1; i <= 5; i++) H.players.set("bot" + i, { name: "Test " + i });
+  renderHost();
+}
+function hostReset() {
+  for (const conn of H.conns.values()) { try { conn.close(); } catch (e) {} }
+  H.conns = new Map(); H.players = new Map(); H.phase = "lobby"; H.round = -1; H.votes = new Map();
+  H.result = null; H.meters = { trust: START_METERS[0], family: START_METERS[1], savings: START_METERS[2] };
+  H.words = { right: [], wrong: [] }; H.submitted = new Set(); H.ending = ""; H.history = [];
+  renderHost();
+}
+
+function renderHost() {
+  const app = document.getElementById("app");
+  if (!H.code) { app.innerHTML = `<p><button id="h-make">Create room</button></p>`;
+    $("#h-make").onclick = () => { H.code = newCode(); hostStart(H.code); }; return; }
+  let html = `<div class="row"><h1>Case 8: Local and International?</h1>
+    <span class="tag">Room ${esc(H.code)} · ${H.players.size} student${H.players.size === 1 ? "" : "s"}</span></div>`;
+  if (H.error) html += `<p class="err">${esc(H.error)}</p>`;
+  if (!H.ready) html += `<p class="muted">Opening the room…</p>`;
+
+  if (H.phase === "lobby") {
+    html += `<div class="box"><p>Students open this page on a phone and tap <b>Join</b>. Enter room code:</p>
+      <p class="code">${esc(H.code)}</p>
+      <ul class="name-list">${[...H.players.values()].map(p => `<li>${esc(p.name)}</li>`).join("") || "<li class='muted'>No students yet.</li>"}</ul></div>
+      <p><button id="h-start" ${H.ready ? "" : "disabled"}>Start the case</button>
+      ${DEMO ? ` <button id="h-bots">Add 5 test students</button>` : ""}
+      <button id="h-reset">Close room</button></p>`;
+  } else if (H.phase === "brief") {
+    html += `${stageSVG("office")}<div class="box"><p>Akiko is an expatriate in New Delhi. Her three-year contract will not renew. HR offers a local international contract instead.</p>
+      <p>The class votes on five decisions. Each vote takes about 30 seconds. The most popular choice moves the story forward.</p></div>
+      <p><button id="h-begin">Begin decision 1</button></p>`;
+  } else if (H.phase === "vote") {
+    const d = DECISIONS[H.round];
+    const voted = H.votes.size;
+    html += `<div class="row"><span class="tag">Decision ${H.round + 1} of ${DECISIONS.length}</span><span class="timer" id="timer">${Math.ceil(Math.max(0, H.deadline - Date.now()) / 1000)}</span></div>
+      ${stageSVG(d.scene)}<h2>${esc(d.title)}</h2><p class="big">${esc(d.prompt)}</p>
+      <div class="opts">${d.options.map((o, i) => `<div class="hostcard" style="background:${COLORS[i]}">${shapeSVG(i, 40)}<span>${esc(o.label)}</span></div>`).join("")}</div>
+      <p><b id="votedCount">${voted} of ${H.players.size} voted</b></p>
+      <p><button id="h-close">Close vote now</button></p>`;
+  } else if (H.phase === "result") {
+    const d = DECISIONS[H.round], r = H.result;
+    const total = Math.max(1, r.counts.reduce((a, b) => a + b, 0));
+    html += `<div class="row"><span class="tag">Decision ${H.round + 1} of ${DECISIONS.length}</span></div>
+      <h2>${esc(d.title)}</h2>
+      <div class="opts">${d.options.map((o, i) => `
+        <div class="hostcard ${i === r.winner ? "winner" : ""}" style="background:${COLORS[i]};opacity:${i === r.winner ? 1 : 0.72}">
+          ${shapeSVG(i, 40)}<span>${esc(o.label)}<br><small>${r.counts[i]} vote${r.counts[i] === 1 ? "" : "s"}${i === r.winner ? " · CHOSEN" : ""}</small></span>
+          <span class="fill" style="width:${Math.round((r.counts[i] / total) * 100)}%"></span></div>`).join("")}</div>
+      ${r.tieNote ? `<p class="muted">${esc(r.tieNote)}</p>` : ""}
+      <div class="box"><p class="big">${esc(r.reaction)}</p><p><b>Teaching point:</b> ${esc(r.why)}</p></div>
+      <div class="box">${meterBars(r.after)}</div>
+      <p><button id="h-next">${H.round + 1 < DECISIONS.length ? "Next decision" : "Reflection"}</button></p>`;
+  } else if (H.phase === "reflect") {
+    html += `<h2>Reflection</h2><p>Students send one word for what went RIGHT and one for what went WRONG. Words appear live. Bigger bubble means said more often.</p>
+      <p class="muted">${H.submitted.size} of ${H.players.size} sent words.</p>
+      <div class="cols"><div><h3>What went RIGHT</h3>${bubbleCloud(H.words.right, "right")}</div>
+      <div><h3>What went WRONG</h3>${bubbleCloud(H.words.wrong, "wrong")}</div></div>
+      <p><button id="h-end">Show the ending</button></p>`;
+  } else if (H.phase === "end") {
+    html += `<div class="box"><p class="big">${esc(H.ending)}</p>${meterBars(meterObj())}</div>
+      <h3>Choices made</h3><ul>${H.history.map(h => `<li>${esc(h)}</li>`).join("")}</ul>
+      ${SUMMARY_HTML}
+      <div class="cols"><div><h3>What went RIGHT</h3>${bubbleCloud(H.words.right, "right")}</div>
+      <div><h3>What went WRONG</h3>${bubbleCloud(H.words.wrong, "wrong")}</div></div>
+      <p><button id="h-new">Close room and start over</button></p>`;
+  }
+  app.innerHTML = html;
+  bindHost();
+}
+function bindHost() {
+  const on = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
+  on("h-start", () => { H.phase = "brief"; broadcast(); renderHost(); });
+  on("h-bots", addBots);
+  on("h-reset", hostReset);
+  on("h-begin", () => startRound(0));
+  on("h-close", closeVote);
+  on("h-next", nextAfterResult);
+  on("h-end", endGame);
+  on("h-new", hostReset);
+}
+
+/* ============================================================
+   CLIENT (student phone)
+   ============================================================ */
+function clientJoin(code, name) {
+  CL.code = code.trim().toUpperCase(); CL.name = name.trim().slice(0, 20);
+  CL.err = ""; CL.joined = false;
+  if (!/^[A-Z]{4}$/.test(CL.code)) { CL.err = "Enter the 4-letter room code."; renderClient(); return; }
+  if (!CL.name) { CL.err = "Enter your name."; renderClient(); return; }
+  CL.role = "student"; CL.view = null;
+  renderClient();
+  const peer = new Peer(PEER_OPTS);
+  CL.peer = peer;
+  const timeout = setTimeout(() => { if (!CL.joined) { CL.err = "Could not reach the room. Check the code and try again."; try { peer.destroy(); } catch (e) {} CL.peer = null; renderClient(); } }, 20000);
+  peer.on("error", () => { CL.err = "Could not connect. Check the code and try again."; CL.peer = null; renderClient(); });
+  peer.on("open", () => {
+    const conn = peer.connect(PREFIX + CL.code.toLowerCase(), { reliable: true });
+    CL.conn = conn;
+    conn.on("open", () => { CL.joined = true; clearTimeout(timeout); conn.send({ t: "join", name: CL.name }); renderClient(); });
+    conn.on("data", m => {
+      if (m && m.t === "view") {
+        const prevRound = CL.view ? CL.view.round + ":" + CL.view.phase : "";
+        CL.view = m.v;
+        if (m.v.remaining !== undefined) CL.deadline = Date.now() + m.v.remaining;
+        if (prevRound !== m.v.round + ":" + m.v.phase) CL.localVote = null;
+        renderClient();
+      }
+    });
+    conn.on("close", () => { CL.err = "The host closed the room."; CL.joined = false; renderClient(); });
+  });
+}
+function clientVote(i) {
+  if (!CL.conn || !CL.view) return;
+  CL.localVote = { round: CL.view.round, opt: i };
+  CL.conn.send({ t: "vote", round: CL.view.round, opt: i });
+  renderClient();
+}
+function clientWords() {
+  if (!CL.conn) return;
+  const right = (document.getElementById("w-right") || {}).value || "";
+  const wrong = (document.getElementById("w-wrong") || {}).value || "";
+  CL.conn.send({ t: "words", right, wrong });
+  CL.view = Object.assign({}, CL.view, { mySubmitted: true });
+  renderClient();
+}
+function renderClient() {
+  const app = document.getElementById("app");
+  if (CL.role !== "student") return;
+  if (!CL.joined) {
+    const busy = !!CL.peer && !CL.err && CL.role === "student";
+    app.innerHTML = `<h1>Join the room</h1>
+      <div class="box">
+      <p>Room code (from the projector):</p><input id="j-code" maxlength="4" autocapitalize="characters" value="${esc(CL.code)}" placeholder="ABCD">
+      <p>Your name:</p><input id="j-name" maxlength="20" value="${esc(CL.name)}" placeholder="Name">
+      <p><button id="j-go" ${busy ? "disabled" : ""}>${busy ? "Connecting…" : "Join"}</button></p>
+      ${CL.err ? `<p class="err">${esc(CL.err)}</p>` : ""}</div>`;
+    document.getElementById("j-go").onclick = () => clientJoin(document.getElementById("j-code").value, document.getElementById("j-name").value);
+    return;
+  }
+  const v = CL.view;
+  let html = `<div class="row"><h1>Case 8 · ${esc(CL.name)}</h1><span class="tag">Room ${esc(CL.code)}</span></div>`;
+  if (!v || v.phase === "lobby") {
+    html += `<div class="box"><p class="big">You are in the room.</p><p>Wait for the host to start the case.</p></div>`;
+  } else if (v.phase === "brief") {
+    html += `<div class="box"><p class="big">The case starts soon.</p><p>Watch the projector. Vote on each decision on this phone.</p></div>`;
+  } else if (v.phase === "vote") {
+    const sel = CL.localVote && CL.localVote.round === v.round ? CL.localVote.opt : v.myVote;
+    html += `<div class="row"><span class="tag">Decision ${v.round + 1} of ${v.total}</span><span class="timer" id="timer">${Math.ceil(Math.max(0, CL.deadline - Date.now()) / 1000)}</span></div>
+      <h2>${esc(v.title)}</h2><p class="big">${esc(v.prompt)}</p>
+      <div class="opts">${v.options.map((o, i) => `<button class="opt ${sel === i ? "sel" : ""}" style="background:${COLORS[i]}" data-i="${i}">${shapeSVG(i)}<span>${esc(o)}</span></button>`).join("")}</div>
+      <p class="muted">${sel === null || sel === undefined ? "Tap one answer." : "Vote sent. You can change it until the timer ends."}</p>`;
+  } else if (v.phase === "result") {
+    const r = v.result;
+    const mine = v.myVote === null || v.myVote === undefined ? "You did not vote." : (v.myVote === r.winner ? "Your vote was chosen." : "Your vote was not chosen.");
+    html += `<h2>${esc(v.title)}</h2>
+      <div class="box"><p>The class chose:</p><p class="big">${esc(r.label)}</p>
+      <p>${esc(r.reaction)}</p><p class="muted">${mine}</p></div>
+      <p class="muted">Wait for the next decision.</p>`;
+  } else if (v.phase === "reflect") {
+    if (v.mySubmitted) {
+      html += `<div class="box"><p class="big">Thanks.</p><p>Your words are on the projector.</p></div>`;
+    } else {
+      html += `<h2>Reflection</h2>
+        <div class="box"><p><b>One word:</b> what went RIGHT in these decisions?</p><input id="w-right" maxlength="20" placeholder="one word">
+        <p><b>One word:</b> what went WRONG?</p><input id="w-wrong" maxlength="20" placeholder="one word">
+        <p><button id="w-send">Send my words</button></p></div>`;
+    }
+  } else if (v.phase === "end") {
+    html += `<div class="box"><p class="big">${esc(v.ending)}</p>${meterBars(v.meters)}</div>${SUMMARY_HTML}`;
+  }
+  app.innerHTML = html;
+  document.querySelectorAll(".opt").forEach(b => b.onclick = () => clientVote(Number(b.dataset.i)));
+  const ws = document.getElementById("w-send");
+  if (ws) ws.onclick = clientWords;
+}
+
+/* ============================================================
+   START + TIMERS
+   ============================================================ */
+function $(s) { return document.querySelector(s); }
+setInterval(() => {
+  const el = document.getElementById("timer");
+  if (H.role === "host" && H.phase === "vote" && H.code) {
+    if (el) el.textContent = Math.ceil(Math.max(0, H.deadline - Date.now()) / 1000);
+    if (Date.now() >= H.deadline) closeVote();
+  }
+  if (CL.role === "student" && CL.view && CL.view.phase === "vote" && el) {
+    el.textContent = Math.ceil(Math.max(0, CL.deadline - Date.now()) / 1000);
+  }
+}, 250);
+
+function startScreen() {
+  const app = document.getElementById("app");
+  app.innerHTML = `<h1>Case 8: Local and International?</h1>
+    <div class="box"><p>A classroom vote game. The host runs the projector. Students join on phones.</p>
+    <p><button id="s-host">Host on the projector</button></p>
+    <p><button id="s-join">Join on a phone</button></p></div>`;
+  document.getElementById("s-host").onclick = () => { H.role = "host"; H.code = newCode(); hostStart(H.code); renderHost(); };
+  document.getElementById("s-join").onclick = () => { CL.role = "student"; CL.joined = false; renderClient(); };
+}
+startScreen();
+</script>
+</body>
+</html>
