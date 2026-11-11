@@ -80,6 +80,46 @@ const SHAPES = ["triangle", "diamond", "circle", "square"];
 
 const DECISIONS = [
   {
+    setup: true,
+    title: "Context 1: SWOT check (question 2)",
+    scene: "policy",
+    prompt: "Before the decisions: which point is a WEAKNESS of the local international policy?",
+    options: [
+      { label: "Lower cost than expatriate packages", d: [0, 0, 0, 0],
+        reaction: "That is a strength. It lowers cost for the company, so it is not a weakness.",
+        why: "Strengths are internal and helpful." },
+      { label: "Pension and social security gaps, with no state pension in some countries", d: [0, 0, 0, 0],
+        reaction: "Correct. Staff in some countries lose state pension cover. That is an internal weakness.",
+        why: "Weaknesses are internal problems the policy causes." },
+      { label: "A large talent pool in Asia", d: [0, 0, 0, 0],
+        reaction: "That is an opportunity. It helps the company, but it comes from outside the policy.",
+        why: "Opportunities are helpful external conditions." },
+      { label: "Families who refuse to move", d: [0, 0, 0, 0],
+        reaction: "That is a threat. It is a harmful external condition for the company.",
+        why: "Threats are harmful external conditions." }
+    ]
+  },
+  {
+    setup: true,
+    title: "Context 2: needs check (question 3)",
+    scene: "home",
+    prompt: "Before the decisions: which need belongs to the EMPLOYER?",
+    options: [
+      { label: "Control cost and reduce expatriate contracts", d: [0, 0, 0, 0],
+        reaction: "Correct. The company wants lower cost and fewer expatriate contracts.",
+        why: "Employer needs: cost control, flexible talent moves, and consistent global rules." },
+      { label: "Clear facts before a decision", d: [0, 0, 0, 0],
+        reaction: "That is an employee need. Staff need facts to decide.",
+        why: "Employee needs: clear facts, family support, pension clarity, and a return path." },
+      { label: "School and housing support for the family", d: [0, 0, 0, 0],
+        reaction: "That is an employee need. Families need support to move.",
+        why: "Employee needs include family support." },
+      { label: "A path back home or to a new role", d: [0, 0, 0, 0],
+        reaction: "That is an employee need. Staff want a plan after the assignment.",
+        why: "Employee needs include a return path and career clarity." }
+    ]
+  },
+  {
     title: "Decision 1: The explanation meeting",
     scene: "office",
     prompt: "Akiko is upset about the new policy. How does Puja handle the meeting?",
@@ -118,7 +158,26 @@ const DECISIONS = [
     ]
   },
   {
-    title: "Decision 3: Design the local international package",
+    title: "Decision 3: External recruits ask why",
+    scene: "pay",
+    prompt: "New local hires ask why local international hires get more support than they do. What does the company say?",
+    options: [
+      { label: "Explain the criteria openly, and open a review path for external hires", d: [1, 0, 1, 0],
+        reaction: "The recruits understand the criteria. Some still want the same support.",
+        why: "Explanation and voice help the recruits accept a policy that gives them less." },
+      { label: "They are external. Different rules apply. That is the end of it.", d: [-1, 0, -1, 1],
+        reaction: "The recruits feel unfairly treated. Some start looking for other jobs.",
+        why: "An equity gap with no explanation raises turnover risk." },
+      { label: "Give all local hires a retention bonus after two years", d: [1, 1, 1, -1],
+        reaction: "Everyone sees a path to reward. Costs rise a little.",
+        why: "Shared outcomes reduce the gap. The case lists a retention bonus as an optional item." },
+      { label: "Remove the extra support from internal hires so all staff are equal", d: [-1, -1, 1, 2],
+        reaction: "Costs fall. Internal hires feel their move is no longer worth it.",
+        why: "Leveling down makes outcomes equal, but it stops rewarding the input of moving abroad." }
+    ]
+  },
+  {
+    title: "Decision 4: Design the local international package",
     scene: "pay",
     prompt: "The company designs the package for local international hires. What does it include?",
     options: [
@@ -137,7 +196,7 @@ const DECISIONS = [
     ]
   },
   {
-    title: "Decision 4: Rules for the future",
+    title: "Decision 5: Rules for the future",
     scene: "office",
     prompt: "Akiko asks what happens if she wants to move again in three to five years. What does Puja promise?",
     options: [
@@ -153,25 +212,6 @@ const DECISIONS = [
       { label: "A one-time exception for Akiko only", d: [1, 1, -2, -1],
         reaction: "Akiko is pleased. Colleagues hear about it and feel treated unfairly.",
         why: "This breaks consistency. Other employees compare themselves with Akiko and feel inequity." }
-    ]
-  },
-  {
-    title: "Decision 5: External recruits ask why",
-    scene: "pay",
-    prompt: "New local hires ask why local international hires get more support than they do. What does the company say?",
-    options: [
-      { label: "Explain the criteria openly, and open a review path for external hires", d: [1, 0, 1, 0],
-        reaction: "The recruits understand the criteria. Some still want the same support.",
-        why: "Explanation and voice help the recruits accept a policy that gives them less." },
-      { label: "They are external. Different rules apply. That is the end of it.", d: [-1, 0, -1, 1],
-        reaction: "The recruits feel unfairly treated. Some start looking for other jobs.",
-        why: "An equity gap with no explanation raises turnover risk." },
-      { label: "Give all local hires a retention bonus after two years", d: [1, 1, 1, -1],
-        reaction: "Everyone sees a path to reward. Costs rise a little.",
-        why: "Shared outcomes reduce the gap. The case lists a retention bonus as an optional item." },
-      { label: "Remove the extra support from internal hires so all staff are equal", d: [-1, -1, 1, 2],
-        reaction: "Costs fall. Internal hires feel their move is no longer worth it.",
-        why: "Leveling down makes outcomes equal, but it stops rewarding the input of moving abroad." }
     ]
   }
 ];
@@ -420,7 +460,7 @@ function hostMsg(conn, m) {
   }
 }
 function viewFor(id) {
-  const v = { phase: H.phase, round: H.round, total: DECISIONS.length, players: H.players.size };
+  const v = { phase: H.phase, round: H.round, total: DECISIONS.length, players: H.players.size, step: H.round >= 0 ? stepName(H.round) : "" };
   if (H.phase === "lobby" || H.phase === "brief") { v.names = [...H.players.values()].map(p => p.name); }
   if (H.phase === "vote") {
     const d = DECISIONS[H.round];
@@ -467,7 +507,7 @@ function closeVote() {
   applyResult(winner);
   const opt = d.options[winner];
   H.result = { counts, winner, tieNote, reaction: opt.reaction, why: opt.why, label: opt.label, before, after: meterObj() };
-  H.history.push(d.title.replace(/^Decision \d+: /, "") + ": " + opt.label);
+  if (!d.setup) H.history.push(d.title.replace(/^Decision \d+: /, "") + ": " + opt.label);
   H.phase = "result";
   broadcast(); renderHost();
 }
@@ -482,6 +522,12 @@ function startRound(r) {
 function nextAfterResult() {
   if (H.round + 1 < DECISIONS.length) startRound(H.round + 1);
   else { H.phase = "reflect"; if (DEMO) botWords(); broadcast(); renderHost(); }
+}
+function stepName(i) {
+  const total = DECISIONS.filter(d => !d.setup).length;
+  if (DECISIONS[i].setup) return "Context " + (i + 1) + " of " + DECISIONS.filter(d => d.setup).length;
+  const n = DECISIONS.slice(0, i + 1).filter(d => !d.setup).length;
+  return "Decision " + n + " of " + total;
 }
 function changeList(before, after) {
   return METERS.map(([k, label]) => {
@@ -538,12 +584,12 @@ function renderHost() {
   } else if (H.phase === "brief") {
     html += `${stageSVG("office")}<div class="box"><p>Akiko is an expatriate in New Delhi. Her husband Hiroshi found work in Singapore, and the family may follow. HR says a move to Singapore now uses a local international contract, not an expatriate contract.</p>
       <p><b>Discussion focus:</b> compare the three package groups, use equity theory and the referent person, and discuss procedural justice.</p>
-      <p>The class votes on five decisions. Each vote takes about 30 seconds. The most popular choice moves the story forward.</p></div>
+      <p>The class answers two context questions, then votes on five decisions. Each vote takes about 30 seconds. The most popular choice moves the story forward.</p></div>
       <p><button id="h-begin">Begin decision 1</button></p>`;
   } else if (H.phase === "vote") {
     const d = DECISIONS[H.round];
     const voted = H.votes.size;
-    html += `<div class="row"><span class="tag">Decision ${H.round + 1} of ${DECISIONS.length}</span><span class="timer" id="timer">${Math.ceil(Math.max(0, H.deadline - Date.now()) / 1000)}</span></div>
+    html += `<div class="row"><span class="tag">${stepName(H.round)}</span><span class="timer" id="timer">${Math.ceil(Math.max(0, H.deadline - Date.now()) / 1000)}</span></div>
       ${stageSVG(d.scene)}<h2>${esc(d.title)}</h2><p class="big">${esc(d.prompt)}</p>
       <div class="opts">${d.options.map((o, i) => `<div class="hostcard" style="background:${COLORS[i]}">${shapeSVG(i, 40)}<span>${esc(o.label)}</span></div>`).join("")}</div>
       <p><b id="votedCount">${voted} of ${H.players.size} voted</b></p>
@@ -551,7 +597,7 @@ function renderHost() {
   } else if (H.phase === "result") {
     const d = DECISIONS[H.round], r = H.result;
     const total = Math.max(1, r.counts.reduce((a, b) => a + b, 0));
-    html += `<div class="row"><span class="tag">Decision ${H.round + 1} of ${DECISIONS.length}</span></div>
+    html += `<div class="row"><span class="tag">${stepName(H.round)}</span></div>
       <h2>${esc(d.title)}</h2>
       <div class="opts">${d.options.map((o, i) => `
         <div class="hostcard ${i === r.winner ? "winner" : ""}" style="background:${COLORS[i]};opacity:${i === r.winner ? 1 : 0.72}">
@@ -562,7 +608,7 @@ function renderHost() {
       <div class="box">${meterBars(r.after)}</div>
       <p><button id="h-why">Discuss why: open the word bubble</button></p>`;
   } else if (H.phase === "why") {
-    html += `<div class="row"><span class="tag">Decision ${H.round + 1} of ${DECISIONS.length}</span></div>
+    html += `<div class="row"><span class="tag">${stepName(H.round)}</span></div>
       <h2>Why did the class choose: ${esc(H.result.label)}?</h2>
       <p>Students send one word for why this choice makes sense, or why it does not. Bigger bubble means more students sent that word.</p>
       <div class="box"><p><b>What happened:</b> ${esc(H.result.reaction)}</p>
@@ -674,7 +720,7 @@ function renderClient() {
     html += `<div class="box"><p class="big">The case starts soon.</p><p>Watch the projector. Vote on each decision on this phone.</p></div>`;
   } else if (v.phase === "vote") {
     const sel = CL.localVote && CL.localVote.round === v.round ? CL.localVote.opt : v.myVote;
-    html += `<div class="row"><span class="tag">Decision ${v.round + 1} of ${v.total}</span><span class="timer" id="timer">${Math.ceil(Math.max(0, CL.deadline - Date.now()) / 1000)}</span></div>
+    html += `<div class="row"><span class="tag">${v.step}</span><span class="timer" id="timer">${Math.ceil(Math.max(0, CL.deadline - Date.now()) / 1000)}</span></div>
       <h2>${esc(v.title)}</h2><p class="big">${esc(v.prompt)}</p>
       <div class="opts">${v.options.map((o, i) => `<button class="opt ${sel === i ? "sel" : ""}" style="background:${COLORS[i]}" data-i="${i}">${shapeSVG(i)}<span>${esc(o)}</span></button>`).join("")}</div>
       <p class="muted">${sel === null || sel === undefined ? "Tap one answer." : "Vote sent. You can change it until the timer ends."}</p>`;
