@@ -49,15 +49,14 @@ input[type=text]{font:inherit;font-size:17px;border:2.5px solid var(--ink);borde
 .empty{color:var(--mid);font-style:italic;margin-top:10px}
 .bubble{max-width:100%;border:2.5px solid var(--ink);border-radius:var(--r);background:#fff;padding:8px 14px;font-size:clamp(17px,1.8vw,21px);line-height:1.3;box-shadow:3px 3px 0 var(--ink);transform:rotate(var(--tilt,0deg));overflow-wrap:anywhere;animation:pop .45s ease-out}
 @keyframes pop{0%{opacity:0;transform:scale(.6) rotate(var(--tilt,0deg))}70%{opacity:1;transform:scale(1.05) rotate(var(--tilt,0deg))}100%{transform:scale(1) rotate(var(--tilt,0deg))}}
-.votecol{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;min-height:340px;text-align:center}
-.votebubble{font-weight:bold;line-height:1.1;padding:.3em .8em;transition:font-size .35s ease-out}
-.votecount{font-size:clamp(20px,2.4vw,28px)}
+.board .col{min-height:380px}
+#whyBox label{display:block;margin-bottom:8px}
 #choices{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
 .choice{font-size:32px;padding:30px 10px;font-weight:bold}
 .choice:disabled{opacity:1;cursor:default}
 .choice:disabled:not(.dark){opacity:.45}
 .note{margin-top:16px;font-size:14px;color:var(--mid)}
-@media (max-width:760px){.board{grid-template-columns:1fr 1fr}.votecol{min-height:220px}.col{min-height:0}.roombox{min-width:0;width:100%}}
+@media (max-width:760px){.board{grid-template-columns:1fr 1fr}.board .col{min-height:220px}.col{min-height:0}.roombox{min-width:0;width:100%}}
 /* phone */
 #phone .box{margin:12px 0}
 #phone h2{margin:0 0 8px}
@@ -111,8 +110,12 @@ input[type=text]{font:inherit;font-size:17px;border:2.5px solid var(--ink);borde
   <!-- Student phone view -->
   <section id="phone" hidden>
     <div class="brand"><svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true"><path d="M5 8 Q5 4 10 4 H30 Q35 4 35 9 V22 Q35 27 30 27 H18 L10 35 L11 27 Q5 26 5 21 Z" fill="#fff" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><path d="M11 12 H29 M11 18 H24" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg><h1 style="font-size:30px">Is the policy fair?</h1></div>
-    <p class="q">Choose one answer. You can send only one.</p>
+    <p class="q">Choose Yes or No. You can send only one answer.</p>
     <div id="choices" role="group" aria-label="Is the policy fair?"></div>
+    <div class="box" id="whyBox" hidden>
+      <label for="whyIn">Why? (optional)</label>
+      <input type="text" id="whyIn" maxlength="80" autocomplete="off" placeholder="Type a short phrase">
+    </div>
     <button class="btn dark" id="sendBtn" type="button" disabled>Send my answer</button>
     <p class="status" id="phoneStatus" role="status"></p>
   </section>
@@ -2429,6 +2432,7 @@ var qrcode = function() {
   var CODE_CHARS = "abcdefghjkmnpqrstuvwxyz23456789";
   var CODE_RE = /^[a-z2-9]{6,12}$/;
   var VOTER_RE = /^[a-z2-9]{8,32}$/;
+  var MAX_LEN = 80, MAX_SHOWN = 120;
 
   var $ = function (id) { return document.getElementById(id); };
   var BASE = location.href.split(/[?#]/)[0];
@@ -2475,15 +2479,19 @@ var qrcode = function() {
     board.textContent = "";
     CHOICES.forEach(function (title) {
       var col = document.createElement("div");
-      col.className = "col votecol";
-      var bubble = document.createElement("div");
-      bubble.className = "bubble votebubble";
-      bubble.textContent = title;
+      col.className = "col";
+      var h2 = document.createElement("h2");
+      h2.textContent = title;
       var cnt = document.createElement("div");
-      cnt.className = "votecount";
-      col.append(bubble, cnt);
+      cnt.className = "cnt";
+      var empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = "No bubbles yet.";
+      var list = document.createElement("div");
+      list.className = "bubbles";
+      col.append(h2, cnt, empty, list);
       board.appendChild(col);
-      cols.push({ bubble: bubble, cnt: cnt });
+      cols.push({ cnt: cnt, empty: empty, list: list });
     });
   }
 
@@ -2493,10 +2501,18 @@ var qrcode = function() {
     var pct = total ? [yes, 100 - yes] : [0, 0];
     cols.forEach(function (col, c) {
       col.cnt.textContent = counts[c] + (counts[c] === 1 ? " vote" : " votes") + " · " + pct[c] + "%";
-      // The word bubble grows with its share of the votes.
-      col.bubble.style.fontSize = (34 + pct[c] * 0.62).toFixed(0) + "px";
+      col.empty.hidden = counts[c] > 0;
     });
     $("countTag").textContent = total + (total === 1 ? " answer" : " answers");
+  }
+
+  function addBubble(c, text) {
+    var el = document.createElement("div");
+    el.className = "bubble";
+    el.style.setProperty("--tilt", (Math.random() * 3 - 1.5).toFixed(2) + "deg");
+    el.textContent = text;
+    cols[c].list.appendChild(el);
+    while (cols[c].list.children.length > MAX_SHOWN) cols[c].list.removeChild(cols[c].list.firstChild);
   }
 
   function setTag(text) { $("liveTag").textContent = text; }
@@ -2512,6 +2528,8 @@ var qrcode = function() {
     // Only the first answer from each phone counts.
     voters.add(body.id);
     counts[body.a]++;
+    var said = typeof body.t === "string" ? body.t.trim().slice(0, MAX_LEN) : "";
+    addBubble(body.a, said || CHOICES[body.a]);
     render();
   }
 
@@ -2537,6 +2555,7 @@ var qrcode = function() {
     seen = new Set();
     voters = new Set();
     counts = [0, 0];
+    cols.forEach(function (col) { col.list.textContent = ""; });
     render();
     showHost(newCode());
   });
@@ -2561,6 +2580,8 @@ var qrcode = function() {
       b.disabled = locked || sending;
     });
     $("sendBtn").hidden = locked;
+    $("whyBox").hidden = locked || choice < 0;
+    $("whyIn").disabled = sending;
     $("sendBtn").disabled = choice < 0 || sending;
   }
 
@@ -2577,7 +2598,7 @@ var qrcode = function() {
     renderPhone();
     phoneMsg("Sending…");
     try {
-      var r = await fetch(RELAY + TOPIC + phoneCode, { method: "POST", body: JSON.stringify({ v: 1, id: voterId, a: choice }) });
+      var r = await fetch(RELAY + TOPIC + phoneCode, { method: "POST", body: JSON.stringify({ v: 1, id: voterId, a: choice, t: $("whyIn").value.trim().slice(0, MAX_LEN) }) });
       if (!r.ok) throw new Error("HTTP " + r.status);
       sending = false;
       store(lockKey(), String(choice));
@@ -2610,6 +2631,9 @@ var qrcode = function() {
   }
 
   $("sendBtn").addEventListener("click", send);
+  $("whyIn").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); send(); }
+  });
 
   // ---------- Join ----------
   function tryJoin() {
