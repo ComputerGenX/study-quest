@@ -8,4 +8,6 @@ Games for live classes. Each one is a single HTML file that runs in the browser.
 
 - `case8-swot/`: Case 8 SWOT bubbles. It works like `case8-columns/`, with its own link, QR code, and rooms. Students send short phrases into four boxes: Strengths, Weaknesses, Opportunities, and Threats.
 
+- `case8-fair/`: Case 8 "Is the policy fair?" poll. Each phone chooses Yes or No and can send one answer. The host page shows the votes and percentages, and the word bubbles grow with each answer's share.
+
 PeerJS connects the host and phones. The host page must stay open for the whole game.
