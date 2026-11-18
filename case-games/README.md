@@ -6,4 +6,6 @@ Games for live classes. Each one is a single HTML file that runs in the browser.
 
 - `case8-columns/`: Case 8 word bubbles. Students scan a QR code and send short phrases into three columns: Employers' needs, Employees' needs, and Elements to add. The host page shows each phrase as a bubble. It uses HTTPS only (ntfy.sh relay), so it does not need WebRTC.
 
+- `case8-swot/`: Case 8 SWOT bubbles. It works like `case8-columns/`, with its own link, QR code, and rooms. Students send short phrases into four boxes: Strengths, Weaknesses, Opportunities, and Threats.
+
 PeerJS connects the host and phones. The host page must stay open for the whole game.
